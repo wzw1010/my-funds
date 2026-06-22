@@ -805,7 +805,7 @@
         }
 
         // ============================================================
-        //  核心显示逻辑：盘后也优先显示估算
+        //  核心显示逻辑
         // ============================================================
         function getDisplay(code) {
             var d = cache[code] || {};
@@ -874,13 +874,12 @@
         }
 
         // ============================================================
-        //  渲染（名称8字符截断 + 代码独立显示完整）
+        //  渲染
         // ============================================================
         function render() {
             var codes = Object.keys(holdings);
             var s = computeSummary();
 
-            // 今日盈亏
             var todayEl = document.getElementById('todayProfitBig');
             if (s.todayProfit !== 0) {
                 todayEl.textContent = (s.todayProfit >= 0 ? '+' : '') + s.todayProfit.toFixed(2);
@@ -919,7 +918,6 @@
                 return;
             }
 
-            // 编辑模式
             if (isBulkEditing) {
                 var html = '';
                 codes.forEach(function(code) {
@@ -983,7 +981,6 @@
                 return;
             }
 
-            // 正常模式
             var html = '';
             codes.forEach(function(code) {
                 var h = holdings[code];
@@ -1178,12 +1175,12 @@
         }
 
         // ============================================================
-        //  添加持仓
+        //  添加持仓（修复版本：iOS 兼容 + 数字键盘 + 导航修复）
         // ============================================================
         function addHolding() {
             showModal('添加持仓',
                 '输入基金代码、成本净值、持有份额',
-                '<input type="text" id="modalCode" placeholder="基金代码" maxlength="6" inputmode="numeric"><input type="number" id="modalCost" placeholder="成本净值" step="any"><input type="number" id="modalShares" placeholder="持有份额" step="any">', [{
+                '<input type="text" id="modalCode" placeholder="基金代码" maxlength="6" inputmode="numeric"><input type="number" id="modalCost" placeholder="成本净值" step="any" inputmode="decimal"><input type="number" id="modalShares" placeholder="持有份额" step="any" inputmode="decimal">', [{
                     text: '取消',
                     cls: 'cancel'
                 }, {
@@ -1198,8 +1195,13 @@
                         if (isNaN(shares) || shares <= 0) { showAlert('请输入有效的持有份额'); return; }
                         holdings[code] = { cost: cost, shares: shares, name: cache[code]?.name || code };
                         saveAll();
-closeModal();
-updateFund(code).then(function() { render(); });
+                        closeModal();
+                        setTimeout(function() {
+                            updateFund(code).then(function() {
+                                render();
+                                appEl.scrollTop = 0;
+                            });
+                        }, 350);
                     }
                 }]
             );
