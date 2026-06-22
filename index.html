@@ -39,6 +39,7 @@
             border-bottom:1px solid rgba(0,0,0,0.05);
             max-width:480px; margin:0 auto; left:50%; transform:translateX(-50%);
             width:100%;
+            min-height: 52px;   /* 苹果端防高度抖动 */
         }
         .nav-title { font-size:28px; font-weight:700; letter-spacing:-0.5px; color:var(--text-primary); }
         .nav-actions { display:flex; align-items:center; }
@@ -206,7 +207,7 @@
 
     <script>
         // ============================================================
-        //  动态调整顶部内边距（根源解决遮挡）
+        //  动态调整顶部内边距
         // ============================================================
         function adjustPadding() {
             var nav = document.getElementById('navFixed');
@@ -459,7 +460,8 @@
             var hl = document.getElementById('holdingsList');
             if(!codes.length) {
                 hl.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div>暂无持仓，点击“编辑”添加</div></div>';
-                adjustPadding();
+                // 调整间距（苹果端延迟加大）
+                requestAnimationFrame(() => { setTimeout(adjustPadding, 300); });
                 return;
             }
 
@@ -508,7 +510,7 @@
                         }
                     });
                 });
-                adjustPadding();
+                requestAnimationFrame(() => { setTimeout(adjustPadding, 300); });
                 return;
             }
 
@@ -539,12 +541,21 @@
                 html += '<div class="holding-bottom"><span class="holding-change '+(dayRate>0?'positive':(dayRate<0?'negative':''))+'">'+dayRateStr+' '+statusTag+'</span><span class="holding-day-profit '+(dayProfit>0?'positive':(dayProfit<0?'negative':''))+'">'+dayProfitStr+'</span></div></div>';
             });
             hl.innerHTML = html;
-            adjustPadding();
+            // 关键修复：苹果端需要更长的等待时间
+            requestAnimationFrame(() => { setTimeout(adjustPadding, 300); });
         }
 
         // ============================================================
         //  模态框
         // ============================================================
+        function afterModalClose(callback) {
+            // 确保模态框的过渡动画完全结束（0.3s 后再执行回调）
+            closeModal();
+            setTimeout(function() {
+                if (typeof callback === 'function') callback();
+            }, 350); // 比动画时长略长，给苹果端足够的重排时间
+        }
+
         function showAlert(message, callback) {
             modalTitle.textContent = '提示';
             modalDesc.textContent = message;
@@ -554,8 +565,7 @@
             btn.textContent = '确定';
             btn.className = 'confirm';
             btn.onclick = function() {
-                closeModal();
-                if (typeof callback === 'function') callback();
+                afterModalClose(callback);
             };
             modalBtns.appendChild(btn);
             modal.classList.add('active');
@@ -570,15 +580,13 @@
             cancelBtn.textContent = '取消';
             cancelBtn.className = 'cancel';
             cancelBtn.onclick = function() {
-                closeModal();
-                if (typeof onCancel === 'function') onCancel();
+                afterModalClose(onCancel);
             };
             var confirmBtn = document.createElement('button');
             confirmBtn.textContent = '确定';
             confirmBtn.className = 'danger';
             confirmBtn.onclick = function() {
-                closeModal();
-                if (typeof onConfirm === 'function') onConfirm();
+                afterModalClose(onConfirm);
             };
             modalBtns.appendChild(cancelBtn);
             modalBtns.appendChild(confirmBtn);
@@ -595,7 +603,11 @@
                 btn.textContent = b.text;
                 btn.className = b.cls;
                 btn.onclick = function() {
-                    if (b.action) { b.action(); } else { closeModal(); }
+                    if (b.action) {
+                        b.action(); // action 内部负责关闭模态框和后续逻辑
+                    } else {
+                        afterModalClose();
+                    }
                 };
                 modalBtns.appendChild(btn);
             });
@@ -611,7 +623,7 @@
         });
 
         // ============================================================
-        //  菜单 & 主按钮（使用 addEventListener）
+        //  菜单 & 主按钮
         // ============================================================
         function handleMainButton() {
             if (isBulkEditing) {
@@ -694,7 +706,7 @@
         }
 
         // ============================================================
-        //  添加持仓
+        //  添加持仓（苹果端修复：关闭模态框后延迟执行）
         // ============================================================
         function addHolding() {
             showModal('添加持仓',
@@ -713,9 +725,11 @@
                         if(isNaN(shares) || shares<=0) { showAlert('请输入有效的持有份额'); return; }
                         holdings[code] = { cost, shares, name: cache[code]?.name || code };
                         saveAll();
-                        closeModal();
-                        updateFund(code).then(function(){
-                            render();
+                        // 关键：等待模态框完全消失再更新
+                        afterModalClose(function() {
+                            updateFund(code).then(function(){
+                                render();
+                            });
                         });
                     }
                 }]
@@ -723,13 +737,11 @@
         }
 
         // ============================================================
-        //  事件绑定（全部使用 addEventListener，避免 onclick 失效）
+        //  事件绑定
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // 主按钮
             mainBtn.addEventListener('click', handleMainButton);
 
-            // 下拉菜单项
             document.querySelectorAll('.menu-item[data-action]').forEach(function(item) {
                 item.addEventListener('click', function() {
                     var action = this.getAttribute('data-action');
@@ -737,7 +749,6 @@
                 });
             });
 
-            // 导入文件
             document.getElementById('importFile').addEventListener('change', function(e) {
                 var file = e.target.files[0];
                 if (!file) return;
@@ -791,7 +802,6 @@
                 }, { passive: true });
             })();
 
-            // 键盘 Escape 关闭
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     if (isBulkEditing) {
@@ -807,13 +817,11 @@
                 }
             });
 
-            // 窗口变化调整顶部间距
             window.addEventListener('resize', adjustPadding);
             window.addEventListener('orientationchange', function() {
                 setTimeout(adjustPadding, 200);
             });
 
-            // Service Worker
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                     navigator.serviceWorker.register('sw.js')
@@ -822,15 +830,13 @@
                 });
             }
 
-            // 定时更新（交易时段每分钟）
             setInterval(function() {
                 if (isTradingTime()) updateAll();
             }, 60000);
 
-            // 首次渲染 & 调整间距
             render();
             setTimeout(adjustPadding, 50);
-            console.log('🚀 基金跟踪已启动');
+            console.log('🚀 基金跟踪已启动 (iOS 优化版)');
         });
     </script>
 </body>
