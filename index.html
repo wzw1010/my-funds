@@ -1198,8 +1198,8 @@
                         if (isNaN(shares) || shares <= 0) { showAlert('请输入有效的持有份额'); return; }
                         holdings[code] = { cost: cost, shares: shares, name: cache[code]?.name || code };
                         saveAll();
-                        updateFund(code).then(function() { render(); });
-                        closeModal();
+closeModal();
+updateFund(code).then(function() { render(); });
                     }
                 }]
             );
