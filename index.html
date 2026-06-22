@@ -65,7 +65,7 @@
             background: transparent;
         }
 
-        /* ===== 顶部导航 ===== */
+        /* ===== 顶部导航（增加稳定层） ===== */
         .nav {
             display: flex;
             align-items: center;
@@ -75,6 +75,9 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            /* 强制硬件加速，避免 iOS 渲染抖动 */
+            transform: translateZ(0);
+            will-change: transform;
         }
         .nav-title {
             font-size: 28px;
@@ -1175,7 +1178,7 @@
         }
 
         // ============================================================
-        //  添加持仓（修复版本：iOS 兼容 + 数字键盘 + 导航修复）
+        //  添加持仓（最终修复版：针对 iOS 彻底解决导航消失）
         // ============================================================
         function addHolding() {
             showModal('添加持仓',
@@ -1195,13 +1198,32 @@
                         if (isNaN(shares) || shares <= 0) { showAlert('请输入有效的持有份额'); return; }
                         holdings[code] = { cost: cost, shares: shares, name: cache[code]?.name || code };
                         saveAll();
+                        
+                        // 关闭模态框
                         closeModal();
+                        
+                        // 延迟等待模态框动画完全结束（iOS 需要更长时间）
                         setTimeout(function() {
+                            // 先强制滚动到顶部，确保导航可见
+                            appEl.scrollTop = 0;
+                            
+                            // 更新数据并重新渲染
                             updateFund(code).then(function() {
                                 render();
+                                
+                                // 渲染后再次滚动并强制重排
                                 appEl.scrollTop = 0;
+                                // 强制触发重排（读取 offsetHeight 触发）
+                                void appEl.offsetHeight;
+                                // 再次确保顶部
+                                appEl.scrollTop = 0;
+                                
+                                // 使用 requestAnimationFrame 再执行一次，确保所有帧完成
+                                requestAnimationFrame(function() {
+                                    appEl.scrollTop = 0;
+                                });
                             });
-                        }, 350);
+                        }, 450); // 延长到 450ms 更保险
                     }
                 }]
             );
