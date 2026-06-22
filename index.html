@@ -68,7 +68,6 @@
             border-bottom: 1px solid rgba(0,0,0,0.05);
             max-width: 480px;
             margin: 0 auto;
-            /* 确保在max-width下居中 */
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
@@ -102,13 +101,14 @@
             color: var(--red);
         }
 
-        /* ===== 滚动容器 ===== */
+        /* ===== 滚动容器 - 修复顶部间距 ===== */
         .app {
             max-width: 480px;
             margin: 0 auto;
             height: 100vh;
             overflow-y: auto;
-            padding: calc(var(--nav-height) + var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 80px);
+            /* 关键修复：加大顶部间距，确保卡片完整露出 */
+            padding: calc(var(--nav-height) + var(--safe-top) + 40px) 16px calc(var(--safe-bottom) + 80px);
             background: var(--bg);
             -webkit-overflow-scrolling: touch;
         }
@@ -1176,7 +1176,7 @@
         }
 
         // ============================================================
-        //  添加持仓（修复版）
+        //  添加持仓
         // ============================================================
         function addHolding() {
             showModal('添加持仓',
@@ -1197,7 +1197,6 @@
                         holdings[code] = { cost: cost, shares: shares, name: cache[code]?.name || code };
                         saveAll();
                         closeModal();
-                        // 直接更新，不需要任何滚动操作，因为导航固定不动
                         updateFund(code).then(function() {
                             render();
                         });
