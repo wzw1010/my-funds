@@ -1,12 +1,12 @@
 {
-  "name": "基金跟踪",
-  "short_name": "基金跟踪",
-  "description": "基金持仓跟踪工具",
-  "start_url": "/my-funds/index.html",
+  "name": "持仓跟踪",
+  "short_name": "持仓跟踪",
+  "description": "基金持仓跟踪工具，盘中看预估，盘后看实际",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#f2f2f7",
-  "theme_color": "#f2f2f7",
   "orientation": "portrait",
+  "background_color": "#f2f5fa",
+  "theme_color": "#0b1a33",
   "icons": [
     {
       "src": "icon-1024.png",
