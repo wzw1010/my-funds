@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>💶持仓跟踪</title>
-
-    <!-- ===== PWA 配置 ===== -->
     <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -873,11 +871,10 @@
     const YESTERDAY_KEY = 'fund_yesterday_data_v1';
     let funds = [];
     let realtimeData = {};
-    let yesterdayData = {}; // 存储昨日盈亏和收益率
+    let yesterdayData = {};
     let autoTimer = null;
 
     function loadData() {
-        // 加载持仓
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             try {
@@ -888,7 +885,6 @@
         funds = [];
         saveData();
 
-        // 加载昨日数据
         const rawY = localStorage.getItem(YESTERDAY_KEY);
         if (rawY) {
             try {
@@ -901,21 +897,16 @@
 
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(funds)); }
 
-    // ============================================================
-    //  保存昨日数据（盘后调用）
-    // ============================================================
     function saveYesterdayData() {
         if (funds.length === 0) return;
         const today = new Date().toISOString().slice(0,10);
-        // 如果已经保存过今天的数据，则跳过
         if (yesterdayData._date === today) return;
 
-        // 计算每只基金的昨日盈亏（使用腾讯净值）
         let totalYesterdayProfit = 0;
         const map = {};
+        let totalShares = 0;
         funds.forEach(f => {
             const rt = realtimeData[f.code] || {};
-            // 使用 calcFundStats 计算今天的实际盈亏（此时应为盘后，changePercent已更新）
             const stats = calcFundStats(f, rt);
             map[f.code] = {
                 yesterdayProfit: stats.todayProfit,
@@ -930,7 +921,7 @@
     }
 
     // ============================================================
-    //  交易时段判断：9:15 ~ 15:15
+    //  交易时段判断
     // ============================================================
     function isTradingDay() {
         const now = new Date();
@@ -1027,7 +1018,7 @@
     }
 
     // ============================================================
-    //  核心计算（支持开盘前显示昨日数据）
+    //  核心计算
     // ============================================================
     function calcFundStats(fund, realtime) {
         const { cost, shares } = fund;
@@ -1036,51 +1027,50 @@
         const now = new Date();
         const h = now.getHours(), m = now.getMinutes();
         const totalMinutes = h * 60 + m;
-        const isBeforeTrading = totalMinutes < 555; // 9:15之前
+        const isBeforeTrading = totalMinutes < 555;
 
-        // 如果是在开盘前（9:15之前），且存在昨日数据，则直接返回昨日数据
+        // 开盘前：优先使用缓存的逐只数据
         if (isBeforeTrading) {
-            const yesterday = yesterdayData[fund.code];
-            if (yesterday) {
-                // 使用当前的净值（或成本）计算市值和持有收益，但盈亏使用昨日数据
+            const cached = yesterdayData[fund.code];
+            if (cached) {
+                // 使用当前净值计算市值和持有收益
                 const nav = realtime?.nav || cost;
                 const marketValue = nav * shares;
                 const profit = marketValue - costValue;
                 const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
                 return {
-                    costValue: costValue,
-                    marketValue: marketValue,
-                    profit: profit,
-                    profitRate: profitRate,
-                    todayProfit: yesterday.yesterdayProfit || 0,
-                    todayProfitRate: yesterday.yesterdayProfitRate || 0,
-                    currentNav: nav,
-                    prevNav: nav,
-                    isEstimate: false,
-                    navDate: realtime?.navDate || '',
-                };
-            } else {
-                // 没有昨日数据，返回0
-                const nav = realtime?.nav || cost;
-                const marketValue = nav * shares;
-                const profit = marketValue - costValue;
-                const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
-                return {
-                    costValue: costValue,
-                    marketValue: marketValue,
-                    profit: profit,
-                    profitRate: profitRate,
-                    todayProfit: 0,
-                    todayProfitRate: 0,
+                    costValue,
+                    marketValue,
+                    profit,
+                    profitRate,
+                    todayProfit: cached.yesterdayProfit || 0,
+                    todayProfitRate: cached.yesterdayProfitRate || 0,
                     currentNav: nav,
                     prevNav: nav,
                     isEstimate: false,
                     navDate: realtime?.navDate || '',
                 };
             }
+            // 没有逐只缓存，先返回0，将在renderFundList中按比例分配
+            const nav = realtime?.nav || cost;
+            const marketValue = nav * shares;
+            const profit = marketValue - costValue;
+            const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
+            return {
+                costValue,
+                marketValue,
+                profit,
+                profitRate,
+                todayProfit: 0,
+                todayProfitRate: 0,
+                currentNav: nav,
+                prevNav: nav,
+                isEstimate: false,
+                navDate: realtime?.navDate || '',
+            };
         }
 
-        // 否则正常计算盘中或盘后
+        // 盘中或盘后：正常计算
         let currentNav = 0;
         let rate = 0;
         let isEstimate = false;
@@ -1172,12 +1162,10 @@
     }
 
     function renderAll() {
-        // 如果是盘后且是交易日，保存今日数据作为明日的昨日数据
         const now = new Date();
         const h = now.getHours(), m = now.getMinutes();
         const total = h * 60 + m;
         if (total >= 915 && isTradingDay()) {
-            // 盘后，且是交易日，保存今日数据
             saveYesterdayData();
         }
         renderSummary();
@@ -1231,7 +1219,6 @@
         const totalMinutes = h * 60 + m;
         const isBeforeTrading = totalMinutes < 555;
 
-        // 如果开盘前且有昨日数据，显示昨日总盈亏
         if (isBeforeTrading && yesterdayData._total !== undefined) {
             const total = yesterdayData._total || 0;
             const sign = total >= 0 ? '+' : '';
@@ -1242,7 +1229,6 @@
             return;
         }
 
-        // 否则正常计算今日
         let totalToday = 0;
         funds.forEach(f => {
             const rt = realtimeData[f.code] || {};
@@ -1281,10 +1267,29 @@
         const isTrading = isTradingTime();
 
         let html = '';
-        funds.forEach(f => {
+        // 如果开盘前且有缓存总数据，但没有逐只缓存，则按份额比例分配
+        const hasTotalCache = (yesterdayData._total !== undefined);
+        let totalShares = 0;
+        if (isBeforeTrading && hasTotalCache) {
+            // 计算总份额
+            funds.forEach(f => { totalShares += f.shares; });
+        }
+
+        funds.forEach((f, index) => {
             const rt = realtimeData[f.code] || {};
             const stats = calcFundStats(f, rt);
-            const today = stats.todayProfit;
+            let today = stats.todayProfit;
+            let rate = stats.todayProfitRate;
+
+            // 如果是开盘前且没有逐只缓存，但有总缓存，则按比例分配
+            if (isBeforeTrading && hasTotalCache && !yesterdayData[f.code]) {
+                const shareRatio = totalShares > 0 ? f.shares / totalShares : 0;
+                today = (yesterdayData._total || 0) * shareRatio;
+                // 计算收益率：用分配后的盈亏除以（份额 * 昨净），这里昨净用成本近似
+                const prevNav = stats.prevNav || f.cost;
+                rate = (prevNav * f.shares) !== 0 ? (today / (prevNav * f.shares)) * 100 : 0;
+            }
+
             const dotClass = stats.isEstimate ? 'estimate' : 'updated';
             const sign = today >= 0 ? '+' : '';
             const profitClass = today > 0 ? 'positive' : (today < 0 ? 'negative' : 'neutral');
@@ -1292,22 +1297,19 @@
 
             let profitDisplay, profitClassDisplay, returnDisplay, returnClassDisplay;
             if (isBeforeTrading) {
-                // 开盘前：显示昨日数据（已在 calcFundStats 中返回）
                 profitDisplay = sign + today.toFixed(2);
                 profitClassDisplay = profitClass;
-                returnDisplay = sign + stats.todayProfitRate.toFixed(2) + '%';
+                returnDisplay = sign + rate.toFixed(2) + '%';
                 returnClassDisplay = profitClass;
             } else if (isTrading) {
-                // 盘中：显示 --
                 profitDisplay = '--';
                 profitClassDisplay = 'hidden';
                 returnDisplay = '--';
                 returnClassDisplay = 'hidden';
             } else {
-                // 盘后：显示实际值
                 profitDisplay = sign + today.toFixed(2);
                 profitClassDisplay = profitClass;
-                returnDisplay = sign + stats.todayProfitRate.toFixed(2) + '%';
+                returnDisplay = sign + rate.toFixed(2) + '%';
                 returnClassDisplay = profitClass;
             }
 
