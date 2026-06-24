@@ -14,7 +14,6 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 样式（完整保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -41,7 +40,6 @@
             display: flex;
             flex-direction: column;
         }
-
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -223,7 +221,6 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             background: #fafcff;
         }
-
         .fund-card::before {
             content: '';
             position: absolute;
@@ -248,7 +245,6 @@
             flex-direction: column;
             gap: 2px;
         }
-
         .fund-row {
             display: flex;
             align-items: center;
@@ -849,8 +845,7 @@
 
 <script>
     // ============================================================
-    //  核心逻辑修复：强制显示今日盈亏和收益率
-    //  增加 NaN 保护 + 反推涨跌幅
+    //  核心逻辑（修复版：涨跌幅自动反推 + NaN 清理）
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -863,24 +858,35 @@
     function loadData() {
         try { holdings = JSON.parse(localStorage.getItem(STORAGE_H)) || {}; } catch (e) { holdings = {}; }
         try { cache = JSON.parse(localStorage.getItem(STORAGE_C)) || {}; } catch (e) { cache = {}; }
+        // 清理历史脏数据中的 NaN
+        Object.keys(cache).forEach(code => {
+            const d = cache[code];
+            if (isNaN(parseFloat(d.actualRate))) d.actualRate = 0;
+            if (isNaN(parseFloat(d.actualNav))) d.actualNav = '0';
+            if (isNaN(parseFloat(d.prevNav))) d.prevNav = null;
+        });
     }
 
     function saveAll() {
-        localStorage.setItem(STORAGE_H, JSON.stringify(holdings));
-        localStorage.setItem(STORAGE_C, JSON.stringify(cache));
+        try {
+            localStorage.setItem(STORAGE_H, JSON.stringify(holdings));
+            localStorage.setItem(STORAGE_C, JSON.stringify(cache));
+        } catch (e) {
+            console.warn('存储空间不足', e);
+        }
     }
     loadData();
 
     const HOLIDAYS = new Set([
-        '2026-01-01', '2026-01-02', '2026-01-03',
-        '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19',
-        '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23',
-        '2026-04-04', '2026-04-05', '2026-04-06',
-        '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
-        '2026-06-19', '2026-06-20', '2026-06-21',
-        '2026-09-25', '2026-09-26', '2026-09-27',
-        '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04',
-        '2026-10-05', '2026-10-06', '2026-10-07'
+        '2026-01-01','2026-01-02','2026-01-03',
+        '2026-02-15','2026-02-16','2026-02-17','2026-02-18','2026-02-19',
+        '2026-02-20','2026-02-21','2026-02-22','2026-02-23',
+        '2026-04-04','2026-04-05','2026-04-06',
+        '2026-05-01','2026-05-02','2026-05-03','2026-05-04','2026-05-05',
+        '2026-06-19','2026-06-20','2026-06-21',
+        '2026-09-25','2026-09-26','2026-09-27',
+        '2026-10-01','2026-10-02','2026-10-03','2026-10-04',
+        '2026-10-05','2026-10-06','2026-10-07'
     ]);
 
     function isTradingDay() {
@@ -901,7 +907,6 @@
         return h >= 19 && h < 24;
     }
 
-    // ===== 工具：校验基金名称 =====
     function isValidName(name) {
         if (!name) return false;
         if (typeof name !== 'string') return false;
@@ -917,6 +922,12 @@
         return code;
     }
 
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     // ============================================================
     //  数据获取接口
     // ============================================================
@@ -924,8 +935,7 @@
         return new Promise(function(resolve) {
             const callbackName = 'em_cb_' + code + '_' + Date.now();
             const script = document.createElement('script');
-            const timer = setTimeout(function() { cleanup();
-                resolve(null); }, 8000);
+            const timer = setTimeout(function() { cleanup(); resolve(null); }, 8000);
 
             function cleanup() {
                 clearTimeout(timer);
@@ -961,8 +971,7 @@
             };
 
             script.src = 'https://api.fund.eastmoney.com/f10/lsjz?fundCode=' + code + '&pageIndex=1&pageSize=1&callback=' + callbackName;
-            script.onerror = function() { cleanup();
-                resolve(null); };
+            script.onerror = function() { cleanup(); resolve(null); };
             document.head.appendChild(script);
         });
     }
@@ -970,8 +979,7 @@
     function fetchTTFund(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
-            const timer = setTimeout(function() { cleanup();
-                resolve(null); }, 8000);
+            const timer = setTimeout(function() { cleanup(); resolve(null); }, 8000);
             window.jsonpgz = function(data) {
                 if (data && data.fundcode === code) {
                     cleanup();
@@ -984,8 +992,7 @@
                 if (script.parentNode) script.remove();
             }
             script.src = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
-            script.onerror = function() { cleanup();
-                resolve(null); };
+            script.onerror = function() { cleanup(); resolve(null); };
             document.head.appendChild(script);
         });
     }
@@ -993,8 +1000,7 @@
     function fetchTencentNav(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
-            const timer = setTimeout(function() { cleanup();
-                resolve(null); }, 10000);
+            const timer = setTimeout(function() { cleanup(); resolve(null); }, 10000);
             const varName = 'v_jj' + code;
 
             function cleanup() {
@@ -1022,8 +1028,7 @@
                     resolve(null);
                 }
             };
-            script.onerror = function() { cleanup();
-                resolve(null); };
+            script.onerror = function() { cleanup(); resolve(null); };
             document.head.appendChild(script);
         });
     }
@@ -1094,7 +1099,7 @@
     }
 
     // ============================================================
-    //  🔥 更新单只基金（修复版）
+    //  更新单只基金（修复版：存储 prevNav + 拒绝 NaN）
     // ============================================================
     async function updateFund(code) {
         const old = cache[code] || {};
@@ -1103,22 +1108,25 @@
 
         if (data) {
             const name = getValidName(data.name, code);
-            // 判断是否获取到了今日的实际净值
             const hasTodayNav = data.nav && data.nav > 0 && data.navDate === today;
 
             cache[code] = {
                 name: name,
                 gsz: data.gsz || old.gsz || 0,
                 gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
-                // 如果有今日实际净值，强制覆盖；否则保留旧值
+                // 保留前一交易日净值，用于反推涨跌幅
+                prevNav: hasTodayNav ? (old.actualNav || null) : (old.prevNav || null),
                 actualNav: hasTodayNav ? String(data.nav) : old.actualNav,
-                actualRate: hasTodayNav ? (data.changePercent !== undefined ? data.changePercent : old.actualRate) : old.actualRate,
                 actualDate: hasTodayNav ? data.navDate : old.actualDate,
+                // 只存储有效的实际涨跌幅
+                actualRate: hasTodayNav && !isNaN(data.changePercent) && isFinite(data.changePercent)
+                    ? data.changePercent
+                    : old.actualRate || 0,
                 source: data.source || old.source || 'tt'
             };
         } else {
             if (!old.name) {
-                cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
+                cache[code] = { name: code, gsz: 0, gszzl: 0, prevNav: null, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
             }
         }
         saveAll();
@@ -1132,11 +1140,18 @@
         try {
             const codes = Object.keys(holdings);
             if (codes.length) {
-                await Promise.all(codes.map(code => updateFund(code)));
+                await batchUpdate(codes);
                 renderAll();
             }
         } catch (e) {
             console.warn('后台更新失败，数据保持不变', e);
+        }
+    }
+
+    async function batchUpdate(codes, size = 5) {
+        for (let i = 0; i < codes.length; i += size) {
+            const batch = codes.slice(i, i + size);
+            await Promise.all(batch.map(code => updateFund(code)));
         }
     }
 
@@ -1145,15 +1160,11 @@
         isUpdating = true;
 
         showUpdating(true);
-        setTimeout(() => {
+        renderAll();
+        silentUpdate().finally(() => {
             showUpdating(false);
             isUpdating = false;
-        }, 200);
-
-        renderAll();
-        silentUpdate().then(() => {
-            if (isTradingTime()) { stopAutoRefresh();
-                startAutoRefresh(); }
+            if (isTradingTime()) { stopAutoRefresh(); startAutoRefresh(); }
         });
     }
 
@@ -1199,31 +1210,35 @@
                 });
                 if (done) stopNightFetch();
             });
-        }, 10 * 60 * 1000);
+        }, 5 * 60 * 1000);
     }
 
     function stopNightFetch() {
-        if (nightTimer) { clearInterval(nightTimer);
-            nightTimer = null; }
+        if (nightTimer) { clearInterval(nightTimer); nightTimer = null; }
     }
 
     // ============================================================
-    //  显示逻辑（🔥 核心修复：强制返回有效 rate）
+    //  显示逻辑（修复版：净值反推涨跌幅）
     // ============================================================
     function getDisplay(code) {
         const d = cache[code] || {};
         const today = new Date().toISOString().slice(0, 10);
 
-        // 实际净值
+        // 实际净值日
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
             if (!isNaN(nav) && nav > 0) {
                 let rate = parseFloat(d.actualRate);
+                // 如果涨跌幅无效，尝试用前一交易日净值反推
                 if (isNaN(rate) || rate === 0) {
-                    // 🔥 如果 actualRate 无效，尝试从 gszzl 取值（盘中估值可能已有）
-                    rate = parseFloat(d.gszzl) || 0;
+                    const prevNav = parseFloat(d.prevNav);
+                    if (!isNaN(prevNav) && prevNav > 0) {
+                        rate = ((nav - prevNav) / prevNav) * 100;
+                    } else {
+                        rate = parseFloat(d.gszzl) || 0;
+                    }
                 }
-                return { nav: nav, rate: rate, source: 'actual' };
+                return { nav, rate, source: 'actual' };
             }
         }
 
@@ -1235,7 +1250,7 @@
             }
         }
 
-        // 兜底：成本价
+        // 兜底成本价
         const h = holdings[code] || {};
         const cost = parseFloat(h.cost) || 0;
         if (cost > 0) {
@@ -1248,9 +1263,7 @@
     function computeSummary() {
         const codes = Object.keys(holdings);
         if (!codes.length) return { totalAsset: 0, todayProfit: 0, totalProfit: 0, totalYield: 0 };
-        let totalCost = 0,
-            totalMV = 0,
-            todayProfit = 0;
+        let totalCost = 0, totalMV = 0, todayProfit = 0;
         codes.forEach(function(code) {
             const h = holdings[code];
             const cost = parseFloat(h.cost) || 0;
@@ -1380,9 +1393,6 @@
         setStat('totalReturn', s.totalYield, true);
     }
 
-    // ============================================================
-    //  🔥 渲染基金列表：强制显示，NaN 保护
-    // ============================================================
     function renderFundList() {
         const container = document.getElementById('fundList');
         const codes = Object.keys(holdings);
@@ -1398,10 +1408,8 @@
         }
 
         const sorted = codes.slice().sort((a, b) => {
-            const hA = holdings[a],
-                hB = holdings[b];
-            const dA = getDisplay(a),
-                dB = getDisplay(b);
+            const hA = holdings[a], hB = holdings[b];
+            const dA = getDisplay(a), dB = getDisplay(b);
             const mvA = (dA.nav || parseFloat(hA.cost) || 0) * (parseFloat(hA.shares) || 0);
             const mvB = (dB.nav || parseFloat(hB.cost) || 0) * (parseFloat(hB.shares) || 0);
             return mvB - mvA;
@@ -1431,13 +1439,10 @@
 
             const isActual = display.source === 'actual';
             const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
-            const sign = todayProfit >= 0 ? '+' : '';
 
-            // 🔥🔥🔥 强制显示，NaN 保护
-            const profitDisplay = isNaN(todayProfit) ? '0.00' : sign + todayProfit.toFixed(2);
-            const returnDisplay = isNaN(todayProfitRate) ? '0.00%' : sign + todayProfitRate.toFixed(2) + '%';
+            const profitDisplay = isNaN(todayProfit) ? '0.00' : (todayProfit >= 0 ? '+' : '') + todayProfit.toFixed(2);
+            const returnDisplay = isNaN(todayProfitRate) ? '0.00%' : (todayProfitRate >= 0 ? '+' : '') + todayProfitRate.toFixed(2) + '%';
 
-            // 颜色判断：如果数值为 0 或 NaN，使用 neutral
             let pClass = 'neutral';
             if (!isNaN(todayProfit) && todayProfit > 0) pClass = 'positive';
             else if (!isNaN(todayProfit) && todayProfit < 0) pClass = 'negative';
@@ -1451,7 +1456,7 @@
                     <div class="fund-content">
                         <div class="fund-row fund-row-top">
                             <div class="fund-name-wrap">
-                                <span class="fund-name">${name}</span>
+                                <span class="fund-name">${escapeHtml(name)}</span>
                                 <span class="fund-code">${code}</span>
                             </div>
                             <div class="fund-actions">
@@ -1484,9 +1489,6 @@
         renderFundList();
     }
 
-    // ============================================================
-    //  刷新状态（秒关）
-    // ============================================================
     function showUpdating(show) {
         const tip = document.getElementById('updatingTip');
         const btn = document.getElementById('refreshBtn');
@@ -1515,8 +1517,7 @@
     }
 
     function stopAutoRefresh() {
-        if (autoTimer) { clearInterval(autoTimer);
-            autoTimer = null; }
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
     }
 
     // ============================================================
@@ -1545,9 +1546,6 @@
         autoFillFromCode(code);
     }
 
-    // ============================================================
-    //  模态框工具
-    // ============================================================
     const promptOverlay = document.getElementById('promptModalOverlay');
     const promptTitle = document.getElementById('promptTitle');
     const promptMessage = document.getElementById('promptMessage');
@@ -1707,8 +1705,7 @@
         const exportBtn = document.getElementById('exportBtn');
         const importInput = document.getElementById('importFileInput');
 
-        openBtn.addEventListener('click', (e) => { e.stopPropagation();
-            overlay.classList.add('active'); });
+        openBtn.addEventListener('click', (e) => { e.stopPropagation(); overlay.classList.add('active'); });
         closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
         overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
 
@@ -1764,7 +1761,7 @@
     }
 
     // ============================================================
-    //  🚀 启动
+    //  启动
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         loadData();
