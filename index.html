@@ -1094,25 +1094,27 @@
     }
 
     // ============================================================
-    //  更新单只基金
+    //  🔥 更新单只基金（修复版）
     // ============================================================
     async function updateFund(code) {
         const old = cache[code] || {};
         const data = await fetchFundDataOnly(code);
+        const today = new Date().toISOString().substring(0, 10);
 
         if (data) {
             const name = getValidName(data.name, code);
-            const today = new Date().toISOString().substring(0, 10);
-            const hasExisting = old.actualDate === today && parseFloat(old.actualNav) > 0;
+            // 判断是否获取到了今日的实际净值
+            const hasTodayNav = data.nav && data.nav > 0 && data.navDate === today;
 
             cache[code] = {
                 name: name,
                 gsz: data.gsz || old.gsz || 0,
                 gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
-                actualNav: hasExisting ? old.actualNav : (data.nav ? String(data.nav) : old.actualNav),
-                actualRate: hasExisting ? old.actualRate : (data.changePercent !== undefined ? data.changePercent : old.actualRate),
-                actualDate: hasExisting ? old.actualDate : (data.navDate || old.actualDate || ''),
-                source: hasExisting ? old.source : (data.source || old.source || 'tt')
+                // 如果有今日实际净值，强制覆盖；否则保留旧值
+                actualNav: hasTodayNav ? String(data.nav) : old.actualNav,
+                actualRate: hasTodayNav ? (data.changePercent !== undefined ? data.changePercent : old.actualRate) : old.actualRate,
+                actualDate: hasTodayNav ? data.navDate : old.actualDate,
+                source: data.source || old.source || 'tt'
             };
         } else {
             if (!old.name) {
