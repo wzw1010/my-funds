@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>💶持仓跟踪</title>
+    <title>持仓跟踪</title>
+
+    <!-- ===== PWA 配置 ===== -->
     <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="持仓跟踪" />
     <link rel="apple-touch-icon" href="icon-1024.png" />
-    <meta name="theme-color" content="#0b1a33" />
+    <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 全局重置 ===== */
+        /* ===== 大卡片外壳 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -25,22 +27,22 @@
             background: #f2f5fa;
             display: flex;
             justify-content: center;
-            padding: 8px;
+            padding: 4px;
             overflow-x: hidden;
         }
         .app-container {
             max-width: 480px;
             width: 100%;
             background: #ffffff;
-            border-radius: 24px;
+            border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-            padding: 14px 16px 20px;
+            padding: 14px 14px 20px;
             min-height: 95vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* ===== 顶部导航 ===== */
+        /* ===== 顶部导航栏 ===== */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -49,7 +51,7 @@
             flex-shrink: 0;
         }
         .app-header h1 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: #0b1a33;
             display: flex;
@@ -57,8 +59,8 @@
             gap: 6px;
         }
         .app-header h1 svg {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             flex-shrink: 0;
         }
         .header-actions {
@@ -66,12 +68,12 @@
             gap: 4px;
         }
         .header-actions button {
-            background: #f0f4fe;
+            background: #e8edf5;
             border: none;
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            font-size: 14px;
+            font-size: 15px;
             color: #1a4f8b;
             cursor: pointer;
             transition: 0.15s;
@@ -80,96 +82,126 @@
             justify-content: center;
         }
         .header-actions button:active {
-            transform: scale(0.92);
-            background: #dce6f5;
+            transform: scale(0.88);
+            background: #d5dde8;
+        }
+        .header-actions button i {
+            font-size: 16px;
         }
 
-        /* ===== 顶部汇总卡片 ===== */
+        /* ===== 合并后的汇总卡片 ===== */
         .summary-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
-            border-radius: 16px;
-            padding: 12px 16px;
+            border-radius: 20px;
+            padding: 14px 20px 12px 20px;
             color: white;
-            margin-bottom: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
+            margin-bottom: 16px;
             flex-shrink: 0;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .summary-left .label {
-            font-size: 11px;
-            font-weight: 500;
-            opacity: 0.6;
+        .summary-today {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
         }
-        .summary-left .total-value {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-        .summary-left .total-value .currency {
-            font-size: 14px;
+        .summary-today .today-label {
+            font-size: 13px;
             font-weight: 500;
             opacity: 0.7;
-            margin-right: 2px;
-        }
-        .summary-right {
+            letter-spacing: 0.3px;
             display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
         }
-        .summary-stat {
-            text-align: right;
+        .summary-today .today-label svg {
+            width: 16px;
+            height: 16px;
+            stroke: rgba(255,255,255,0.7);
+            stroke-width: 2;
+            fill: none;
         }
-        .summary-stat .stat-label {
-            font-size: 9px;
+        .summary-today .today-value {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            margin-top: 0px;
+        }
+        .summary-today .today-value.positive { color: #E63946; }
+        .summary-today .today-value.negative { color: #2A9D8F; }
+        .summary-today .today-value.neutral { color: #94a3b8; }
+        .summary-today .today-value.privacy { color: #94a3b8; letter-spacing: 4px; }
+
+        .summary-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+            margin: 0 0 10px 0;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .summary-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            gap: 2px;
+        }
+        .summary-stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 15%;
+            height: 70%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .summary-stat-item .stat-label-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .summary-stat-item .stat-icon {
+            width: 14px;
+            height: 14px;
+            stroke: rgba(255, 255, 255, 0.5);
+            stroke-width: 2;
+            fill: none;
+            flex-shrink: 0;
+        }
+        .summary-stat-item .stat-label {
+            font-size: 10px;
             opacity: 0.5;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
-        .summary-stat .stat-number {
-            font-size: 14px;
+        .summary-stat-item .stat-number {
+            font-size: 17px;
             font-weight: 600;
+            line-height: 1.3;
+        }
+        .summary-stat-item .stat-number.privacy {
+            letter-spacing: 3px;
+            color: #94a3b8 !important;
         }
         .stat-number.positive { color: #E63946; }
         .stat-number.negative { color: #2A9D8F; }
         .stat-number.neutral { color: #94a3b8; }
-        .stat-number.hidden { color: rgba(255,255,255,0.25); }
-
-        /* ===== 今日盈亏条（独立） ===== */
-        .today-bar {
-            background: #f8faff;
-            border-radius: 12px;
-            padding: 6px 14px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid #2a7de1;
-            flex-shrink: 0;
-        }
-        .today-bar .label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #1a3a5a;
-        }
-        .today-bar .label i {
-            margin-right: 4px;
-        }
-        .today-bar .value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .today-bar .value.positive { color: #E63946; }
-        .today-bar .value.negative { color: #2A9D8F; }
-        .today-bar .value.neutral { color: #94a3b8; }
 
         /* ===== 基金列表 ===== */
         .fund-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 12px;
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -178,23 +210,50 @@
         /* ===== 基金卡片 ===== */
         .fund-card {
             background: #ffffff;
-            border-radius: 12px;
-            padding: 4px 12px 4px 14px;
-            border: 1px solid #eef2f8;
-            height: 100px;
+            border-radius: 14px;
+            padding: 6px 12px 6px 0;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             flex-shrink: 0;
+            min-height: 90px;
+            transition: box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
         }
         .fund-card:active {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             background: #fafcff;
         }
+
+        /* ===== 装饰条 ===== */
+        .fund-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 0;
+            transition: background 0.3s;
+        }
+        .fund-card.decor-actual::before { background: #14b8a6; }
+        .fund-card.decor-estimate::before { background: #8aabb8; }
+
+        .fund-card .fund-content {
+            padding-left: 14px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .fund-row {
             display: flex;
             align-items: center;
             line-height: 1.3;
-            gap: 1px;
         }
         .fund-row-top {
             display: flex;
@@ -212,7 +271,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 28px;
+            height: 26px;
         }
 
         .fund-name-wrap {
@@ -220,19 +279,6 @@
             align-items: center;
             gap: 6px;
         }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .status-dot.updated {
-            background: #14b8a6;
-        }
-        .status-dot.estimate {
-            background: #f97316;
-        }
-
         .fund-name {
             font-size: 14px;
             font-weight: 600;
@@ -287,7 +333,6 @@
         .fund-profit.positive { color: #E63946; }
         .fund-profit.negative { color: #2A9D8F; }
         .fund-profit.neutral { color: #94a3b8; }
-        .fund-profit.hidden { color: #d5dde8; }
 
         .fund-return {
             font-size: 12px;
@@ -301,29 +346,36 @@
         .fund-return.positive { color: #E63946; }
         .fund-return.negative { color: #2A9D8F; }
         .fund-return.neutral { color: #94a3b8; }
-        .fund-return.hidden { color: #d5dde8; }
 
         .fund-details-left {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            align-items: center;
+            gap: 14px;
             font-size: 11px;
             color: #5a6e8a;
         }
-        .fund-details-left span i {
-            margin-right: 3px;
+        .fund-details-left .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .fund-details-left .detail-item i {
             opacity: 0.5;
-            width: 12px;
+            color: #8a9bb5;
+            font-size: 11px;
         }
         .fund-details-right {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 600;
             color: #0b1a33;
+            margin-left: auto;
         }
-        .fund-details-right .label-sm {
-            font-weight: 400;
-            font-size: 9px;
-            color: #7b8da8;
+        .fund-details-right i {
+            color: #8a9bb5;
+            font-size: 11px;
+            margin-right: 4px;
+            opacity: 0.5;
         }
 
         /* ===== 空状态 ===== */
@@ -347,7 +399,7 @@
             margin-top: 2px;
         }
 
-        /* ===== 模态框 - 无卡片背景 ===== */
+        /* ===== 模态框 ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -439,9 +491,6 @@
         }
         .add-modal .add-content .auto-fill-info.show {
             display: block;
-        }
-        .add-modal .add-content .auto-fill-info i {
-            margin-right: 6px;
         }
         .add-modal .add-content .modal-actions {
             display: flex;
@@ -637,24 +686,59 @@
             border-radius: 10px;
         }
 
+        /* ===== 刷新加载状态 ===== */
+        .refresh-loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .refresh-loading i {
+            animation: spin 1s infinite linear;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== 更新中… 提示 ===== */
+        .updating-tip {
+            text-align: center;
+            font-size: 12px;
+            color: #7b8da8;
+            padding: 4px 0 8px 0;
+            display: none;
+        }
+        .updating-tip.show {
+            display: block;
+        }
+        .updating-tip i {
+            margin-right: 4px;
+        }
+
+        /* ===== 移动端适配 ===== */
         @media (max-width: 420px) {
             .app-container { padding: 10px 12px 16px; }
-            .summary-left .total-value { font-size: 19px; }
-            .summary-right { gap: 12px; }
-            .summary-stat .stat-number { font-size: 12px; }
-            .today-bar .value { font-size: 16px; }
-            .fund-card { height: 92px; padding: 3px 10px; }
+            .summary-card { padding: 12px 14px 10px 14px; }
+            .summary-today .today-value { font-size: 26px; }
+            .summary-today .today-label { font-size: 12px; }
+            .summary-stat-item .stat-number { font-size: 15px; }
+            .summary-stat-item .stat-icon { width: 12px; height: 12px; }
+            .summary-stat-item .stat-label { font-size: 9px; }
+
+            .fund-card { min-height: 78px; }
+            .fund-card .fund-content { padding-left: 12px; }
             .fund-name { font-size: 13px; }
-            .fund-details-left { font-size: 10px; gap: 6px; }
-            .fund-details-right { font-size: 11px; }
             .fund-profit { font-size: 12px; }
             .fund-return { font-size: 11px; }
-            .header-actions button { width: 32px; height: 32px; font-size: 13px; }
-            .app-header h1 { font-size: 16px; }
-            .app-header h1 svg { width: 20px; height: 20px; }
+            .fund-details-left { font-size: 10px; gap: 10px; }
+            .fund-details-right { font-size: 13px; }
             .fund-row-top { height: 28px; }
             .fund-row-mid { height: 26px; }
-            .fund-row-bot { height: 26px; }
+            .fund-row-bot { height: 24px; }
+
+            .header-actions button { width: 32px; height: 32px; font-size: 13px; }
+            .header-actions button i { font-size: 14px; }
+            .app-header h1 { font-size: 18px; }
+            .app-header h1 svg { width: 22px; height: 22px; }
             .add-modal .add-content { padding: 16px; }
             .add-modal .add-content .input-group input { font-size: 15px; padding: 10px 14px; }
             .backup-modal .backup-content { padding: 16px; }
@@ -664,9 +748,10 @@
 <body>
 <div class="app-container" id="app">
 
+    <!-- ===== 顶部导航栏 ===== -->
     <header class="app-header">
         <h1>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4.97883 9.68508C2.99294 8.89073 2 8.49355 2 8C2 7.50645 2.99294 7.10927 4.97883 6.31492L7.7873 5.19153C9.77318 4.39718 10.7661 4 12 4C13.2339 4 14.2268 4.39718 16.2127 5.19153L19.0212 6.31492C21.0071 7.10927 22 7.50645 22 8C22 8.49355 21.0071 8.89073 19.0212 9.68508L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L4.97883 9.68508Z" fill="#1C274C"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M2 8C2 8.49355 2.99294 8.89073 4.97883 9.68508L7.7873 10.8085C9.77318 11.6028 10.7661 12 12 12C13.2339 12 14.2268 11.6028 16.2127 10.8085L19.0212 9.68508C21.0071 8.89073 22 8.49355 22 8C22 7.50645 21.0071 7.10927 19.0212 6.31492L16.2127 5.19153C14.2268 4.39718 13.2339 4 12 4C10.7661 4 9.77318 4.39718 7.7873 5.19153L4.97883 6.31492C2.99294 7.10927 2 7.50645 2 8Z" fill="#1C274C"/>
                 <path opacity="0.7" d="M5.76613 10L4.97883 10.3149C2.99294 11.1093 2 11.5065 2 12C2 12.4935 2.99294 12.8907 4.97883 13.6851L7.7873 14.8085C9.77318 15.6028 10.7661 16 12 16C13.2339 16 14.2268 15.6028 16.2127 14.8085L19.0212 13.6851C21.0071 12.8907 22 12.4935 22 12C22 11.5065 21.0071 11.1093 19.0212 10.3149L18.2339 10L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L5.76613 10Z" fill="#1C274C"/>
@@ -675,34 +760,69 @@
             持仓跟踪
         </h1>
         <div class="header-actions">
-            <button id="refreshBtn" title="刷新"><i class="fas fa-sync-alt"></i></button>
             <button id="openAddModalBtn" title="添加基金"><i class="fas fa-plus-circle"></i></button>
             <button id="openBackupModalBtn" title="配置备份"><i class="fas fa-cloud-upload-alt"></i></button>
+            <button id="refreshBtn" title="刷新"><i class="fas fa-sync-alt"></i></button>
         </div>
     </header>
 
-    <section class="summary-card">
-        <div class="summary-left">
-            <div class="label"><i class="fas fa-wallet"></i> 总资产</div>
-            <div class="total-value"><span class="currency">¥</span><span id="totalAssets">0.00</span></div>
+    <!-- ===== 更新中… 提示 ===== -->
+    <div class="updating-tip" id="updatingTip">
+        <i class="fas fa-spinner fa-spin"></i> 更新中…
+    </div>
+
+    <!-- ===== 汇总卡片 ===== -->
+    <section class="summary-card" id="summaryCard">
+        <div class="summary-today">
+            <span class="today-label" id="todayLabel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                今日预估盈亏
+            </span>
+            <span class="today-value" id="todayProfitBig">+0.00</span>
         </div>
-        <div class="summary-right">
-            <div class="summary-stat">
-                <div class="stat-label">持有收益</div>
-                <div class="stat-number" id="totalProfit">+0.00</div>
+
+        <hr class="summary-divider" />
+
+        <div class="summary-stats">
+            <div class="summary-stat-item">
+                <div class="stat-label-wrap">
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span class="stat-label">总资产</span>
+                </div>
+                <div class="stat-number neutral" id="totalAssets">0.00</div>
             </div>
-            <div class="summary-stat">
-                <div class="stat-label">总收益率</div>
-                <div class="stat-number" id="totalReturn">0.00%</div>
+
+            <div class="summary-stat-item">
+                <div class="stat-label-wrap">
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                        <polyline points="17 6 23 6 23 12" />
+                    </svg>
+                    <span class="stat-label">持有收益</span>
+                </div>
+                <div class="stat-number neutral" id="totalProfit">+0.00</div>
+            </div>
+
+            <div class="summary-stat-item">
+                <div class="stat-label-wrap">
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span class="stat-label">总收益率</span>
+                </div>
+                <div class="stat-number neutral" id="totalReturn">0.00%</div>
             </div>
         </div>
     </section>
 
-    <div class="today-bar" id="todayBar">
-        <span class="label" id="todayLabel"><i class="far fa-clock"></i> 今日预估盈亏</span>
-        <span class="value" id="todayProfit">+0.00</span>
-    </div>
-
+    <!-- ===== 基金列表 ===== -->
     <div class="fund-list" id="fundList">
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
@@ -712,7 +832,7 @@
     </div>
 </div>
 
-<!-- ===== 添加基金 Modal ===== -->
+<!-- ===== 模态框 ===== -->
 <div class="modal-overlay add-modal" id="modalOverlay">
     <div class="add-content">
         <h2><i class="fas fa-coins" style="color:rgba(255,255,255,0.8);"></i> 添加基金</h2>
@@ -735,7 +855,6 @@
     </div>
 </div>
 
-<!-- ===== 配置备份 Modal ===== -->
 <div class="modal-overlay backup-modal" id="backupModalOverlay">
     <div class="backup-content">
         <h2><i class="fas fa-cloud-upload-alt"></i> 配置备份</h2>
@@ -751,7 +870,6 @@
     </div>
 </div>
 
-<!-- ===== 通用提示 Modal ===== -->
 <div class="modal-overlay prompt-modal" id="promptModalOverlay">
     <div class="prompt-content">
         <h2 id="promptTitle">提示</h2>
@@ -764,9 +882,454 @@
 
 <script>
     // ============================================================
-    //  通用提示模态框
+    //  完整 JS 逻辑 + 隐私模式彩蛋
     // ============================================================
-    let promptResolve = null;
+
+    const STORAGE_H = 'capsule_holdings';
+    const STORAGE_C = 'capsule_cache';
+    let holdings = {};
+    let cache = {};
+    let isUpdating = false;
+    let privacyMode = false;
+
+    function loadData() {
+        try { holdings = JSON.parse(localStorage.getItem(STORAGE_H)) || {}; } catch (e) { holdings = {}; }
+        try { cache = JSON.parse(localStorage.getItem(STORAGE_C)) || {}; } catch (e) { cache = {}; }
+    }
+
+    function saveAll() {
+        localStorage.setItem(STORAGE_H, JSON.stringify(holdings));
+        localStorage.setItem(STORAGE_C, JSON.stringify(cache));
+    }
+    loadData();
+
+    const HOLIDAYS = new Set([
+        '2026-01-01', '2026-01-02', '2026-01-03',
+        '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19',
+        '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23',
+        '2026-04-04', '2026-04-05', '2026-04-06',
+        '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05',
+        '2026-06-19', '2026-06-20', '2026-06-21',
+        '2026-09-25', '2026-09-26', '2026-09-27',
+        '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04',
+        '2026-10-05', '2026-10-06', '2026-10-07'
+    ]);
+
+    function isTradingDay() {
+        const d = new Date();
+        const ds = d.toISOString().slice(0, 10);
+        if (d.getDay() === 0 || d.getDay() === 6) return false;
+        return !HOLIDAYS.has(ds);
+    }
+
+    function isTradingTime() {
+        if (!isTradingDay()) return false;
+        const m = new Date().getHours() * 60 + new Date().getMinutes();
+        return m >= 555 && m < 915;
+    }
+
+    function fetchFund(code) {
+        return new Promise(function(resolve) {
+            const script = document.createElement('script');
+            const timer = setTimeout(function() { cleanup();
+                resolve(null); }, 8000);
+            window.jsonpgz = function(data) {
+                if (data && data.fundcode === code) {
+                    cleanup();
+                    resolve(data);
+                }
+            };
+
+            function cleanup() {
+                clearTimeout(timer);
+                if (script.parentNode) script.remove();
+            }
+            script.src = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
+            script.onerror = function() { cleanup();
+                resolve(null); };
+            document.head.appendChild(script);
+        });
+    }
+
+    function fetchNav(code) {
+        return new Promise(function(resolve) {
+            const ac = new AbortController();
+            const to = setTimeout(function() { ac.abort();
+                resolve(null); }, 10000);
+            fetch('https://qt.gtimg.cn/q=jj' + code, { signal: ac.signal })
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    clearTimeout(to);
+                    const m = text.match(/"([^"]+)"/);
+                    if (m) {
+                        const f = m[1].split('~');
+                        const nav = parseFloat(f[5]);
+                        const rate = parseFloat(f[7]);
+                        const date = f[8] || '';
+                        if (!isNaN(nav) && nav > 0) resolve({ nav: nav, rate: rate, date: date });
+                        else resolve(null);
+                    } else resolve(null);
+                })
+                .catch(function() { clearTimeout(to);
+                    resolve(null); });
+        });
+    }
+
+    function parseDate(str) {
+        if (!str) return null;
+        const m = str.match(/(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
+        if (m) {
+            const y = parseInt(m[1]),
+                mo = parseInt(m[2]),
+                d = parseInt(m[3]);
+            if (y >= 2000 && y <= 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+                return y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            }
+        }
+        return null;
+    }
+
+    async function updateFund(code) {
+        const old = cache[code] || {};
+        const today = new Date().toISOString().slice(0, 10);
+        const isTrading = isTradingTime();
+
+        const est = await fetchFund(code);
+        let gsz = old.gsz,
+            gszzl = old.gszzl,
+            name = old.name || code;
+        if (est) {
+            if (est.gsz) gsz = est.gsz;
+            if (est.gszzl !== undefined) gszzl = est.gszzl;
+            if (est.name) name = est.name;
+        }
+
+        let actualNav = old.actualNav,
+            actualRate = old.actualRate,
+            actualDate = old.actualDate;
+        if (!isTrading || !old.actualDate || old.actualDate !== today) {
+            const navData = await fetchNav(code);
+            if (navData) {
+                actualNav = String(navData.nav);
+                actualRate = navData.rate;
+                const parsed = parseDate(navData.date);
+                if (parsed) actualDate = parsed;
+            }
+        }
+
+        cache[code] = { name, gsz, gszzl, actualNav, actualRate, actualDate };
+        saveAll();
+        return cache[code];
+    }
+
+    async function updateAll() {
+        const codes = Object.keys(holdings);
+        if (!codes.length) return;
+        await Promise.all(codes.map(code => updateFund(code)));
+        renderAll();
+    }
+
+    function getDisplay(code) {
+        const d = cache[code] || {};
+        const today = new Date().toISOString().slice(0, 10);
+
+        if (d.actualDate === today) {
+            const nav = parseFloat(d.actualNav);
+            if (!isNaN(nav) && nav > 0) {
+                return { nav: nav, rate: d.actualRate !== undefined ? parseFloat(d.actualRate) : null, source: 'actual' };
+            }
+        }
+
+        if (isTradingDay()) {
+            const nav2 = parseFloat(d.gsz);
+            if (!isNaN(nav2) && nav2 > 0) {
+                return { nav: nav2, rate: d.gszzl !== undefined ? parseFloat(d.gszzl) : null, source: 'estimate' };
+            }
+        }
+
+        const nav3 = parseFloat(d.actualNav) || parseFloat(d.gsz) || 0;
+        if (nav3 > 0) {
+            return { nav: nav3, rate: d.actualRate !== undefined ? parseFloat(d.actualRate) : null, source: 'fallback' };
+        }
+        return { nav: null, rate: null, source: 'none' };
+    }
+
+    function computeSummary() {
+        const codes = Object.keys(holdings);
+        if (!codes.length) return { totalAsset: 0, todayProfit: 0, totalProfit: 0, totalYield: 0 };
+        let totalCost = 0,
+            totalMV = 0,
+            todayProfit = 0;
+        codes.forEach(function(code) {
+            const h = holdings[code];
+            const cost = parseFloat(h.cost) || 0;
+            const shares = parseFloat(h.shares) || 0;
+            totalCost += cost * shares;
+            const display = getDisplay(code);
+            if (display.nav) {
+                const mv = display.nav * shares;
+                totalMV += mv;
+                const rate = display.rate !== null ? display.rate / 100 : 0;
+                const prev = rate !== 0 ? display.nav / (1 + rate) : display.nav;
+                todayProfit += shares * prev * rate;
+            }
+        });
+        const totalProfit = totalMV - totalCost;
+        const totalYield = totalCost > 0 ? (totalProfit / totalCost * 100) : 0;
+        return { totalAsset: totalMV, todayProfit, totalProfit, totalYield };
+    }
+
+    function allFundsUpdated() {
+        const codes = Object.keys(holdings);
+        if (!codes.length) return false;
+        const today = new Date().toISOString().slice(0, 10);
+        return codes.every(code => {
+            const d = cache[code] || {};
+            return d.actualDate === today && parseFloat(d.actualNav) > 0;
+        });
+    }
+
+    // ===== 隐私模式 =====
+    function applyPrivacyMode() {
+        const todayEl = document.getElementById('todayProfitBig');
+        const totalAssetsEl = document.getElementById('totalAssets');
+        const totalProfitEl = document.getElementById('totalProfit');
+        const totalReturnEl = document.getElementById('totalReturn');
+
+        if (privacyMode) {
+            todayEl.classList.add('privacy');
+            todayEl.textContent = '***';
+            totalAssetsEl.classList.add('privacy');
+            totalAssetsEl.textContent = '***';
+            totalProfitEl.classList.add('privacy');
+            totalProfitEl.textContent = '***';
+            totalReturnEl.classList.add('privacy');
+            totalReturnEl.textContent = '***';
+        } else {
+            todayEl.classList.remove('privacy');
+            totalAssetsEl.classList.remove('privacy');
+            totalProfitEl.classList.remove('privacy');
+            totalReturnEl.classList.remove('privacy');
+            renderAll();
+        }
+    }
+
+    let clickCount = 0;
+    let clickTimer = null;
+
+    function setupPrivacyEasterEgg() {
+        const card = document.getElementById('summaryCard');
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('button')) return;
+            clearTimeout(clickTimer);
+            clickCount++;
+            clickTimer = setTimeout(function() {
+                if (clickCount >= 3) {
+                    privacyMode = !privacyMode;
+                    applyPrivacyMode();
+                }
+                clickCount = 0;
+            }, 400);
+        });
+    }
+
+    // ===== 渲染 =====
+    function renderSummary() {
+        if (privacyMode) return;
+
+        const s = computeSummary();
+        const codes = Object.keys(holdings);
+        const isAllUpdated = allFundsUpdated();
+
+        const todayEl = document.getElementById('todayProfitBig');
+        if (codes.length === 0) {
+            todayEl.textContent = '+0.00';
+            todayEl.className = 'today-value neutral';
+            document.getElementById('todayLabel').innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                今日预估盈亏
+            `;
+        } else {
+            const val = s.todayProfit;
+            todayEl.textContent = (val >= 0 ? '+' : '') + val.toFixed(2);
+            todayEl.className = 'today-value ' + (val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral');
+
+            const label = document.getElementById('todayLabel');
+            const icon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>`;
+            label.innerHTML = icon + (isAllUpdated ? '今日实际盈亏' : '今日预估盈亏');
+        }
+
+        const setStat = (id, val, isPct, isProfit) => {
+            const el = document.getElementById(id);
+            if (codes.length === 0) {
+                el.textContent = isPct ? '0.00%' : '0.00';
+                el.className = 'stat-number neutral';
+                return;
+            }
+            if (isPct && val === 0) {
+                el.textContent = '--';
+                el.className = 'stat-number neutral';
+                return;
+            }
+            const prefix = !isPct && val >= 0 ? '+' : '';
+            el.textContent = prefix + val.toFixed(2) + (isPct ? '%' : '');
+            const cls = val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral';
+            el.className = 'stat-number ' + cls;
+        };
+
+        setStat('totalAssets', s.totalAsset, false);
+        setStat('totalProfit', s.totalProfit, false);
+        setStat('totalReturn', s.totalYield, true);
+    }
+
+    function renderFundList() {
+        const container = document.getElementById('fundList');
+        const codes = Object.keys(holdings);
+        if (codes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>还没有持仓基金</p>
+                    <div class="sub">点击右上角 <i class="fas fa-plus-circle"></i> 添加</div>
+                </div>
+            `;
+            return;
+        }
+
+        const sorted = codes.slice().sort((a, b) => {
+            const hA = holdings[a],
+                hB = holdings[b];
+            const dA = getDisplay(a),
+                dB = getDisplay(b);
+            const mvA = (dA.nav || parseFloat(hA.cost) || 0) * (parseFloat(hA.shares) || 0);
+            const mvB = (dB.nav || parseFloat(hB.cost) || 0) * (parseFloat(hB.shares) || 0);
+            return mvB - mvA;
+        });
+
+        let html = '';
+        sorted.forEach(code => {
+            const h = holdings[code];
+            const d = cache[code] || {};
+            const display = getDisplay(code);
+            const cost = parseFloat(h.cost) || 0;
+            const shares = parseFloat(h.shares) || 0;
+            const currentNav = display.nav || cost;
+            const rate = display.rate !== null ? display.rate : 0;
+            const prevNav = rate !== 0 ? currentNav / (1 + rate / 100) : currentNav;
+            const marketValue = currentNav * shares;
+            const todayProfit = (currentNav - prevNav) * shares;
+            const todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
+
+            const decor = display.source === 'actual' ? 'decor-actual' : 'decor-estimate';
+            const sign = todayProfit >= 0 ? '+' : '';
+
+            const profitDisplay = todayProfit !== 0 ? sign + todayProfit.toFixed(2) : '--';
+            const returnDisplay = todayProfitRate !== 0 ? sign + todayProfitRate.toFixed(2) + '%' : '--';
+            const pClass = todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : 'neutral';
+            const rClass = todayProfitRate > 0 ? 'positive' : todayProfitRate < 0 ? 'negative' : 'neutral';
+            const name = d.name || h.name || code;
+
+            html += `
+                <div class="fund-card ${decor}" data-code="${code}">
+                    <div class="fund-content">
+                        <div class="fund-row fund-row-top">
+                            <div class="fund-name-wrap">
+                                <span class="fund-name">${name}</span>
+                                <span class="fund-code">${code}</span>
+                            </div>
+                            <div class="fund-actions">
+                                <button class="edit-btn" onclick="editFund('${code}')"><i class="fas fa-pen"></i></button>
+                                <button onclick="deleteFund('${code}')"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="fund-row fund-row-mid">
+                            <span class="fund-profit ${pClass}"><span class="label-sm">今日盈亏</span> ${profitDisplay}</span>
+                            <span class="fund-return ${rClass}"><span class="label-sm">收益率</span> ${returnDisplay}</span>
+                        </div>
+                        <div class="fund-row fund-row-bot">
+                            <div class="fund-details-left">
+                                <span class="detail-item"><i class="fas fa-layer-group"></i> 份额：${shares.toFixed(2)}</span>
+                                <span class="detail-item"><i class="fas fa-tag"></i> 成本：${cost.toFixed(4)}</span>
+                            </div>
+                            <div class="fund-details-right">
+                                <i class="fas fa-coins"></i> ¥${marketValue.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderAll() {
+        renderSummary();
+        renderFundList();
+    }
+
+    // ===== 刷新状态 =====
+    function showUpdating(show) {
+        const tip = document.getElementById('updatingTip');
+        const btn = document.getElementById('refreshBtn');
+        const icon = btn.querySelector('i');
+        if (show) {
+            tip.classList.add('show');
+            btn.classList.add('refresh-loading');
+            icon.className = 'fas fa-spinner';
+        } else {
+            tip.classList.remove('show');
+            btn.classList.remove('refresh-loading');
+            icon.className = 'fas fa-sync-alt';
+        }
+        isUpdating = show;
+    }
+
+    let autoTimer = null;
+
+    function startAutoRefresh() {
+        stopAutoRefresh();
+        if (!isTradingDay()) return;
+        if (isTradingTime()) updateAll();
+        autoTimer = setInterval(() => {
+            if (isTradingTime()) updateAll();
+            else stopAutoRefresh();
+        }, 60000);
+    }
+
+    function stopAutoRefresh() {
+        if (autoTimer) { clearInterval(autoTimer);
+            autoTimer = null; }
+    }
+
+    // ===== CRUD =====
+    async function deleteFund(code) {
+        const confirmed = await showConfirm('确定要删除这只基金吗？');
+        if (!confirmed) return;
+        delete holdings[code];
+        delete cache[code];
+        saveAll();
+        renderAll();
+    }
+
+    function editFund(code) {
+        const fund = holdings[code];
+        if (!fund) return;
+        document.getElementById('fundCodeInput').value = code;
+        document.getElementById('fundCostInput').value = fund.cost;
+        document.getElementById('fundSharesInput').value = fund.shares;
+        const confirmBtn = document.getElementById('confirmAddBtn');
+        confirmBtn.dataset.editCode = code;
+        confirmBtn.textContent = '更新基金';
+        confirmBtn.disabled = true;
+        document.getElementById('modalOverlay').classList.add('active');
+        autoFillFromCode(code);
+    }
+
+    // ===== 模态框 =====
     const promptOverlay = document.getElementById('promptModalOverlay');
     const promptTitle = document.getElementById('promptTitle');
     const promptMessage = document.getElementById('promptMessage');
@@ -778,27 +1341,23 @@
             promptMessage.textContent = message || '';
             promptActions.innerHTML = '';
             buttons.forEach((btn) => {
-                const buttonEl = document.createElement('button');
-                buttonEl.textContent = btn.text;
-                buttonEl.className = btn.className || 'btn-confirm';
-                buttonEl.addEventListener('click', () => {
+                const el = document.createElement('button');
+                el.textContent = btn.text;
+                el.className = btn.className || 'btn-confirm';
+                el.addEventListener('click', () => {
                     closePrompt();
                     resolve(btn.value);
                 });
-                promptActions.appendChild(buttonEl);
+                promptActions.appendChild(el);
             });
             promptOverlay.classList.add('active');
         });
     }
 
-    function closePrompt() {
-        promptOverlay.classList.remove('active');
-    }
+    function closePrompt() { promptOverlay.classList.remove('active'); }
 
     function showAlert(message, title = '提示') {
-        return showPrompt(title, message, [
-            { text: '确定', className: 'btn-confirm', value: true }
-        ]);
+        return showPrompt(title, message, [{ text: '确定', className: 'btn-confirm', value: true }]);
     }
 
     function showConfirm(message, title = '确认操作') {
@@ -815,586 +1374,7 @@
         }
     });
 
-    // ============================================================
-    //  JSONP 工具
-    // ============================================================
-    function jsonpRequest(url, callbackName) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = url;
-            const timeout = setTimeout(() => { cleanup(); reject(new Error('超时')); }, 10000);
-            function cleanup() {
-                if (script.parentNode) script.parentNode.removeChild(script);
-                clearTimeout(timeout);
-                try { delete window[callbackName]; } catch (_) {}
-            }
-            window[callbackName] = function(data) { cleanup(); resolve(data); };
-            script.onerror = function() { cleanup(); reject(new Error('网络错误')); };
-            document.head.appendChild(script);
-        });
-    }
-
-    function jsonpRequestTencent(code) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = `https://qt.gtimg.cn/q=jj${code}`;
-            const timeout = setTimeout(() => { cleanup(); reject(new Error('超时')); }, 10000);
-            const varName = `v_jj${code}`;
-            function cleanup() {
-                if (script.parentNode) script.parentNode.removeChild(script);
-                clearTimeout(timeout);
-            }
-            script.onload = function() {
-                cleanup();
-                const raw = window[varName];
-                if (raw && typeof raw === 'string') {
-                    const parts = raw.split('~');
-                    resolve({
-                        name: parts[1] || '',
-                        nav: parseFloat(parts[5]) || 0,
-                        totalNav: parseFloat(parts[6]) || 0,
-                        changePercent: parseFloat(parts[2]) || 0,
-                        estimateChange: parseFloat(parts[7]) || 0,
-                        date: parts[8] || '',
-                    });
-                } else { reject(new Error('格式错误')); }
-            };
-            script.onerror = function() { cleanup(); reject(new Error('网络错误')); };
-            document.head.appendChild(script);
-        });
-    }
-
-    // ============================================================
-    //  数据层
-    // ============================================================
-    const STORAGE_KEY = 'fund_holding_smart_v15';
-    const YESTERDAY_KEY = 'fund_yesterday_data_v1';
-    let funds = [];
-    let realtimeData = {};
-    let yesterdayData = {};
-    let autoTimer = null;
-
-    function loadData() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            try {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length > 0) { funds = parsed; return; }
-            } catch (_) {}
-        }
-        funds = [];
-        saveData();
-
-        const rawY = localStorage.getItem(YESTERDAY_KEY);
-        if (rawY) {
-            try {
-                yesterdayData = JSON.parse(rawY);
-            } catch (_) { yesterdayData = {}; }
-        } else {
-            yesterdayData = {};
-        }
-    }
-
-    function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(funds)); }
-
-    function saveYesterdayData() {
-        if (funds.length === 0) return;
-        const today = new Date().toISOString().slice(0,10);
-        if (yesterdayData._date === today) return;
-
-        let totalYesterdayProfit = 0;
-        const map = {};
-        let totalShares = 0;
-        funds.forEach(f => {
-            const rt = realtimeData[f.code] || {};
-            const stats = calcFundStats(f, rt);
-            map[f.code] = {
-                yesterdayProfit: stats.todayProfit,
-                yesterdayProfitRate: stats.todayProfitRate
-            };
-            totalYesterdayProfit += stats.todayProfit;
-        });
-        map._date = today;
-        map._total = totalYesterdayProfit;
-        yesterdayData = map;
-        localStorage.setItem(YESTERDAY_KEY, JSON.stringify(map));
-    }
-
-    // ============================================================
-    //  交易时段判断
-    // ============================================================
-    function isTradingDay() {
-        const now = new Date();
-        const day = now.getDay();
-        if (day === 0 || day === 6) return false;
-        const m = now.getMonth(), d = now.getDate();
-        if (m === 0 && d === 1) return false;
-        if (m === 0 && d >= 28 && d <= 31) return false;
-        if (m === 1 && d <= 4) return false;
-        if (m === 3 && d >= 4 && d <= 6) return false;
-        if (m === 4 && d >= 1 && d <= 5) return false;
-        if (m === 5 && d >= 31) return false;
-        if (m === 6 && d <= 2) return false;
-        if (m === 9 && d >= 1 && d <= 7) return false;
-        if (m === 9 && d === 6) return false;
-        return true;
-    }
-
-    function isTradingTime() {
-        if (!isTradingDay()) return false;
-        const now = new Date();
-        const h = now.getHours(), m = now.getMinutes();
-        const total = h * 60 + m;
-        return total >= 555 && total < 915;
-    }
-
-    // ============================================================
-    //  API 调用
-    // ============================================================
-    async function fetchTTFund(code) {
-        try {
-            const data = await jsonpRequest(`https://fundgz.1234567.com.cn/js/${code}.js`, 'jsonpgz');
-            return {
-                name: data.name,
-                dwjz: parseFloat(data.dwjz) || 0,
-                gsz: parseFloat(data.gsz) || 0,
-                gszzl: parseFloat(data.gszzl) || 0,
-                jzrq: data.jzrq || '',
-            };
-        } catch (e) { return null; }
-    }
-
-    async function fetchTencentFund(code) {
-        try { return await jsonpRequestTencent(code); } catch (e) { return null; }
-    }
-
-    async function fetchFundDataOnly(code) {
-        const [ttData, txData] = await Promise.all([
-            fetchTTFund(code),
-            fetchTencentFund(code).catch(() => null)
-        ]);
-        let name = '', dwjz = 0, gsz = 0, gszzl = 0, nav = 0, changePercent = 0, estimateChange = 0, navDate = '';
-        if (ttData) {
-            name = ttData.name;
-            dwjz = ttData.dwjz;
-            gsz = ttData.gsz;
-            gszzl = ttData.gszzl;
-            navDate = ttData.jzrq;
-        }
-        if (txData && txData.nav > 0) {
-            nav = txData.nav;
-            changePercent = txData.changePercent || 0;
-            estimateChange = txData.estimateChange || 0;
-            if (txData.date) navDate = txData.date;
-            if (!name) name = txData.name;
-        }
-        return { name, dwjz, gsz, gszzl, nav, changePercent, estimateChange, navDate };
-    }
-
-    async function fetchEstimateOnly(code) {
-        try {
-            const data = await fetchTTFund(code);
-            return data ? { gsz: data.gsz, gszzl: data.gszzl } : null;
-        } catch (e) { return null; }
-    }
-
-    async function fetchFundForAdd(code) {
-        const [ttData, txData] = await Promise.all([
-            fetchTTFund(code),
-            fetchTencentFund(code).catch(() => null)
-        ]);
-        let name = '', displayNav = 0;
-        if (txData && txData.nav > 0) {
-            name = txData.name || '';
-            displayNav = txData.nav;
-        } else if (ttData && ttData.name) {
-            name = ttData.name;
-            displayNav = ttData.gsz || ttData.dwjz || 0;
-        }
-        if (name) {
-            return { name, displayNav };
-        }
-        return null;
-    }
-
-    // ============================================================
-    //  核心计算
-    // ============================================================
-    function calcFundStats(fund, realtime) {
-        const { cost, shares } = fund;
-        const costValue = cost * shares;
-
-        const now = new Date();
-        const h = now.getHours(), m = now.getMinutes();
-        const totalMinutes = h * 60 + m;
-        const isBeforeTrading = totalMinutes < 555;
-
-        // 开盘前：优先使用缓存的逐只数据
-        if (isBeforeTrading) {
-            const cached = yesterdayData[fund.code];
-            if (cached) {
-                // 使用当前净值计算市值和持有收益
-                const nav = realtime?.nav || cost;
-                const marketValue = nav * shares;
-                const profit = marketValue - costValue;
-                const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
-                return {
-                    costValue,
-                    marketValue,
-                    profit,
-                    profitRate,
-                    todayProfit: cached.yesterdayProfit || 0,
-                    todayProfitRate: cached.yesterdayProfitRate || 0,
-                    currentNav: nav,
-                    prevNav: nav,
-                    isEstimate: false,
-                    navDate: realtime?.navDate || '',
-                };
-            }
-            // 没有逐只缓存，先返回0，将在renderFundList中按比例分配
-            const nav = realtime?.nav || cost;
-            const marketValue = nav * shares;
-            const profit = marketValue - costValue;
-            const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
-            return {
-                costValue,
-                marketValue,
-                profit,
-                profitRate,
-                todayProfit: 0,
-                todayProfitRate: 0,
-                currentNav: nav,
-                prevNav: nav,
-                isEstimate: false,
-                navDate: realtime?.navDate || '',
-            };
-        }
-
-        // 盘中或盘后：正常计算
-        let currentNav = 0;
-        let rate = 0;
-        let isEstimate = false;
-        let prevNav = 0;
-
-        const isTrading = isTradingTime();
-
-        if (isTrading && realtime?.gsz && realtime.gsz > 0) {
-            currentNav = realtime.gsz;
-            rate = realtime.gszzl || 0;
-            isEstimate = true;
-        } else if (realtime?.nav && realtime.nav > 0) {
-            currentNav = realtime.nav;
-            rate = realtime.changePercent || 0;
-            isEstimate = false;
-        } else {
-            currentNav = cost;
-            rate = 0;
-            isEstimate = false;
-        }
-
-        if (rate !== 0) {
-            prevNav = currentNav / (1 + rate / 100);
-        } else {
-            prevNav = currentNav;
-        }
-
-        const marketValue = currentNav * shares;
-        const profit = marketValue - costValue;
-        const profitRate = costValue !== 0 ? (profit / costValue) * 100 : 0;
-
-        const todayProfit = (currentNav - prevNav) * shares;
-        const todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
-
-        return {
-            costValue,
-            marketValue,
-            profit,
-            profitRate,
-            todayProfit,
-            todayProfitRate,
-            currentNav,
-            prevNav,
-            isEstimate,
-            navDate: realtime?.navDate || '',
-        };
-    }
-
-    // ============================================================
-    //  渲染
-    // ============================================================
-    async function refreshData() {
-        if (funds.length === 0) { renderAll(); return; }
-        const codes = funds.map(f => f.code);
-        const results = await Promise.all(codes.map(code => fetchFundDataOnly(code)));
-        realtimeData = {};
-        funds.forEach((f, idx) => {
-            const data = results[idx] || {};
-            realtimeData[f.code] = {
-                gsz: data.gsz || 0,
-                gszzl: data.gszzl || 0,
-                nav: data.nav || 0,
-                changePercent: data.changePercent || 0,
-                navDate: data.navDate || '',
-                nameFromApi: data.name || '',
-            };
-        });
-        saveData();
-        renderAll();
-        const btn = document.getElementById('refreshBtn');
-        btn.style.transform = 'rotate(360deg)';
-        setTimeout(() => btn.style.transform = '', 300);
-    }
-
-    async function refreshEstimateOnly() {
-        if (funds.length === 0 || !isTradingTime()) return;
-        const codes = funds.map(f => f.code);
-        const results = await Promise.all(codes.map(code => fetchEstimateOnly(code)));
-        results.forEach((data, idx) => {
-            if (data) {
-                const code = codes[idx];
-                if (realtimeData[code]) {
-                    realtimeData[code].gsz = data.gsz || realtimeData[code].gsz;
-                    realtimeData[code].gszzl = data.gszzl || realtimeData[code].gszzl;
-                }
-            }
-        });
-        renderAll();
-    }
-
-    function renderAll() {
-        const now = new Date();
-        const h = now.getHours(), m = now.getMinutes();
-        const total = h * 60 + m;
-        if (total >= 915 && isTradingDay()) {
-            saveYesterdayData();
-        }
-        renderSummary();
-        renderTodayProfit();
-        renderFundList();
-    }
-
-    function renderSummary() {
-        if (funds.length === 0) {
-            document.getElementById('totalAssets').textContent = '0.00';
-            const pe = document.getElementById('totalProfit');
-            pe.textContent = '+0.00'; pe.className = 'stat-number neutral';
-            const re = document.getElementById('totalReturn');
-            re.textContent = '0.00%'; re.className = 'stat-number neutral';
-            return;
-        }
-        let totalMarket = 0, totalCost = 0, totalProfit = 0;
-        funds.forEach(f => {
-            const rt = realtimeData[f.code] || {};
-            const stats = calcFundStats(f, rt);
-            totalMarket += stats.marketValue;
-            totalCost += stats.costValue;
-            totalProfit += stats.profit;
-        });
-        const totalRate = totalCost !== 0 ? (totalProfit / totalCost) * 100 : 0;
-        document.getElementById('totalAssets').textContent = totalMarket.toFixed(2);
-        const pe = document.getElementById('totalProfit');
-        pe.textContent = (totalProfit >= 0 ? '+' : '') + totalProfit.toFixed(2);
-        pe.className = 'stat-number ' + (totalProfit > 0 ? 'positive' : totalProfit < 0 ? 'negative' : 'neutral');
-        const re = document.getElementById('totalReturn');
-        const isTrading = isTradingTime();
-        if (isTrading) {
-            re.textContent = '--';
-            re.className = 'stat-number hidden';
-        } else {
-            re.textContent = (totalRate >= 0 ? '+' : '') + totalRate.toFixed(2) + '%';
-            re.className = 'stat-number ' + (totalRate > 0 ? 'positive' : totalRate < 0 ? 'negative' : 'neutral');
-        }
-    }
-
-    function renderTodayProfit() {
-        if (funds.length === 0) {
-            document.getElementById('todayProfit').textContent = '+0.00';
-            document.getElementById('todayProfit').className = 'value neutral';
-            document.getElementById('todayLabel').innerHTML = '<i class="far fa-clock"></i> 今日预估盈亏';
-            return;
-        }
-
-        const now = new Date();
-        const h = now.getHours(), m = now.getMinutes();
-        const totalMinutes = h * 60 + m;
-        const isBeforeTrading = totalMinutes < 555;
-
-        if (isBeforeTrading && yesterdayData._total !== undefined) {
-            const total = yesterdayData._total || 0;
-            const sign = total >= 0 ? '+' : '';
-            const el = document.getElementById('todayProfit');
-            el.textContent = sign + total.toFixed(2);
-            el.className = 'value ' + (total > 0 ? 'positive' : (total < 0 ? 'negative' : 'neutral'));
-            document.getElementById('todayLabel').innerHTML = '<i class="fas fa-history"></i> 昨日实际盈亏';
-            return;
-        }
-
-        let totalToday = 0;
-        funds.forEach(f => {
-            const rt = realtimeData[f.code] || {};
-            const stats = calcFundStats(f, rt);
-            totalToday += stats.todayProfit;
-        });
-        const sign = totalToday >= 0 ? '+' : '';
-        const el = document.getElementById('todayProfit');
-        el.textContent = sign + totalToday.toFixed(2);
-        el.className = 'value ' + (totalToday > 0 ? 'positive' : totalToday < 0 ? 'negative' : 'neutral');
-        const label = document.getElementById('todayLabel');
-        if (isTradingTime()) {
-            label.innerHTML = '<i class="far fa-sun"></i> 今日预估盈亏';
-        } else {
-            label.innerHTML = '<i class="fas fa-moon"></i> 今日实际盈亏';
-        }
-    }
-
-    function renderFundList() {
-        const container = document.getElementById('fundList');
-        if (funds.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>还没有持仓基金</p>
-                    <div class="sub">点击右上角 <i class="fas fa-plus-circle"></i> 添加</div>
-                </div>
-            `;
-            return;
-        }
-
-        const now = new Date();
-        const h = now.getHours(), m = now.getMinutes();
-        const totalMinutes = h * 60 + m;
-        const isBeforeTrading = totalMinutes < 555;
-        const isTrading = isTradingTime();
-
-        let html = '';
-        // 如果开盘前且有缓存总数据，但没有逐只缓存，则按份额比例分配
-        const hasTotalCache = (yesterdayData._total !== undefined);
-        let totalShares = 0;
-        if (isBeforeTrading && hasTotalCache) {
-            // 计算总份额
-            funds.forEach(f => { totalShares += f.shares; });
-        }
-
-        funds.forEach((f, index) => {
-            const rt = realtimeData[f.code] || {};
-            const stats = calcFundStats(f, rt);
-            let today = stats.todayProfit;
-            let rate = stats.todayProfitRate;
-
-            // 如果是开盘前且没有逐只缓存，但有总缓存，则按比例分配
-            if (isBeforeTrading && hasTotalCache && !yesterdayData[f.code]) {
-                const shareRatio = totalShares > 0 ? f.shares / totalShares : 0;
-                today = (yesterdayData._total || 0) * shareRatio;
-                // 计算收益率：用分配后的盈亏除以（份额 * 昨净），这里昨净用成本近似
-                const prevNav = stats.prevNav || f.cost;
-                rate = (prevNav * f.shares) !== 0 ? (today / (prevNav * f.shares)) * 100 : 0;
-            }
-
-            const dotClass = stats.isEstimate ? 'estimate' : 'updated';
-            const sign = today >= 0 ? '+' : '';
-            const profitClass = today > 0 ? 'positive' : (today < 0 ? 'negative' : 'neutral');
-            const displayPrev = stats.prevNav || f.cost;
-
-            let profitDisplay, profitClassDisplay, returnDisplay, returnClassDisplay;
-            if (isBeforeTrading) {
-                profitDisplay = sign + today.toFixed(2);
-                profitClassDisplay = profitClass;
-                returnDisplay = sign + rate.toFixed(2) + '%';
-                returnClassDisplay = profitClass;
-            } else if (isTrading) {
-                profitDisplay = '--';
-                profitClassDisplay = 'hidden';
-                returnDisplay = '--';
-                returnClassDisplay = 'hidden';
-            } else {
-                profitDisplay = sign + today.toFixed(2);
-                profitClassDisplay = profitClass;
-                returnDisplay = sign + rate.toFixed(2) + '%';
-                returnClassDisplay = profitClass;
-            }
-
-            html += `
-                <div class="fund-card" data-id="${f.id}">
-                    <div class="fund-row fund-row-top">
-                        <div class="fund-name-wrap">
-                            <span class="status-dot ${dotClass}"></span>
-                            <span class="fund-name">${f.name || f.code}</span>
-                            <span class="fund-code">${f.code}</span>
-                        </div>
-                        <div class="fund-actions">
-                            <button class="edit-btn" onclick="editFund('${f.id}')"><i class="fas fa-pen"></i></button>
-                            <button onclick="deleteFund('${f.id}')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                    <div class="fund-row fund-row-mid">
-                        <span class="fund-profit ${profitClassDisplay}">
-                            <span class="label-sm">今日盈亏</span> ${profitDisplay}
-                        </span>
-                        <span class="fund-return ${returnClassDisplay}">
-                            <span class="label-sm">收益率</span> ${returnDisplay}
-                        </span>
-                    </div>
-                    <div class="fund-row fund-row-bot">
-                        <div class="fund-details-left">
-                            <span><i class="fas fa-layer-group"></i> ${f.shares.toFixed(2)}份</span>
-                            <span><i class="fas fa-tag"></i> 成本 ${f.cost.toFixed(4)}</span>
-                            <span><i class="fas fa-calendar-alt"></i> 昨净 ${displayPrev.toFixed(4)}</span>
-                        </div>
-                        <div class="fund-details-right">
-                            <span class="label-sm">市值</span> ¥${stats.marketValue.toFixed(2)}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    // ============================================================
-    //  自动定时器
-    // ============================================================
-    function startAutoRefresh() {
-        stopAutoRefresh();
-        if (!isTradingDay()) return;
-        if (isTradingTime()) refreshEstimateOnly();
-        autoTimer = setInterval(() => {
-            if (isTradingTime()) {
-                refreshEstimateOnly();
-            } else {
-                stopAutoRefresh();
-            }
-        }, 60000);
-    }
-
-    function stopAutoRefresh() {
-        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-    }
-
-    // ============================================================
-    //  CRUD
-    // ============================================================
-    async function deleteFund(id) {
-        const confirmed = await showConfirm('确定要删除这只基金吗？');
-        if (!confirmed) return;
-        funds = funds.filter(f => f.id !== id);
-        saveData();
-        funds.forEach(f => delete realtimeData[f.code]);
-        renderAll();
-    }
-
-    function editFund(id) {
-        const fund = funds.find(f => f.id === id);
-        if (!fund) return;
-        document.getElementById('fundCodeInput').value = fund.code;
-        document.getElementById('fundCostInput').value = fund.cost;
-        document.getElementById('fundSharesInput').value = fund.shares;
-        const confirmBtn = document.getElementById('confirmAddBtn');
-        confirmBtn.dataset.editId = id;
-        confirmBtn.textContent = '更新基金';
-        confirmBtn.disabled = true;
-        document.getElementById('modalOverlay').classList.add('active');
-        autoFillFromCode(fund.code);
-    }
+    let currentFetchName = '';
 
     async function autoFillFromCode(code) {
         const infoBox = document.getElementById('autoFillInfo');
@@ -1403,13 +1383,14 @@
         if (code.length !== 6 || isNaN(code)) {
             infoBox.classList.remove('show');
             confirmBtn.disabled = true;
+            currentFetchName = '';
             return;
         }
         try {
-            const data = await fetchFundForAdd(code);
+            const data = await fetchFund(code);
             if (data && data.name) {
                 currentFetchName = data.name;
-                const navDisplay = data.displayNav || 0;
+                const navDisplay = parseFloat(data.gsz) || parseFloat(data.dwjz) || 0;
                 infoText.textContent = `已识别：${data.name}（净值 ${navDisplay.toFixed(4)}）`;
                 infoBox.style.borderColor = 'rgba(255,255,255,0.2)';
                 infoBox.classList.add('show');
@@ -1426,11 +1407,6 @@
         }
     }
 
-    // ============================================================
-    //  Modal 逻辑
-    // ============================================================
-    let currentFetchName = '';
-
     function setupModal() {
         const overlay = document.getElementById('modalOverlay');
         const closeBtn = document.getElementById('closeModalBtn');
@@ -1441,7 +1417,7 @@
         const sharesInput = document.getElementById('fundSharesInput');
 
         openBtn.addEventListener('click', () => {
-            confirmBtn.dataset.editId = '';
+            confirmBtn.dataset.editCode = '';
             confirmBtn.textContent = '确认添加';
             confirmBtn.disabled = true;
             codeInput.value = '';
@@ -1453,9 +1429,8 @@
             setTimeout(() => codeInput.focus(), 300);
         });
 
-        function closeModal() { overlay.classList.remove('active'); }
-        closeBtn.addEventListener('click', closeModal);
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+        closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
 
         codeInput.addEventListener('input', function() {
             const code = this.value.trim();
@@ -1472,22 +1447,13 @@
             const code = codeInput.value.trim();
             const cost = parseFloat(costInput.value);
             const shares = parseFloat(sharesInput.value);
-            if (code.length !== 6) {
-                await showAlert('请输入6位基金代码');
-                return;
-            }
-            if (isNaN(cost) || cost <= 0) {
-                await showAlert('请输入有效的成本价');
-                return;
-            }
-            if (isNaN(shares) || shares <= 0) {
-                await showAlert('请输入有效的持有份额');
-                return;
-            }
+            if (code.length !== 6) { await showAlert('请输入6位基金代码'); return; }
+            if (isNaN(cost) || cost <= 0) { await showAlert('请输入有效的成本价'); return; }
+            if (isNaN(shares) || shares <= 0) { await showAlert('请输入有效的持有份额'); return; }
             let name = currentFetchName;
             if (!name) {
                 try {
-                    const data = await fetchFundForAdd(code);
+                    const data = await fetchFund(code);
                     if (data && data.name) name = data.name;
                 } catch (_) {}
             }
@@ -1495,31 +1461,27 @@
                 await showAlert('未能识别基金代码，请确认正确后重试');
                 return;
             }
-            const editId = confirmBtn.dataset.editId;
-            if (editId) {
-                const idx = funds.findIndex(f => f.id === editId);
-                if (idx !== -1) funds[idx] = { ...funds[idx], code, name, cost, shares };
-            } else {
-                const exist = funds.find(f => f.code === code);
-                if (exist) {
-                    const overwrite = await showConfirm(`已存在 ${exist.name}(${code})，是否覆盖？`);
-                    if (!overwrite) return;
-                    exist.cost = cost; exist.shares = shares; exist.name = name;
-                } else {
-                    funds.push({ id: String(Date.now() + Math.random() * 1000), code, name, cost, shares });
+            const editCode = confirmBtn.dataset.editCode;
+            if (editCode) {
+                if (editCode !== code) {
+                    delete holdings[editCode];
+                    delete cache[editCode];
                 }
+                holdings[code] = { cost, shares, name };
+            } else {
+                if (holdings[code]) {
+                    const overwrite = await showConfirm(`已存在 ${name}(${code})，是否覆盖？`);
+                    if (!overwrite) return;
+                }
+                holdings[code] = { cost, shares, name };
             }
-            saveData();
-            closeModal();
-            realtimeData = {};
-            await refreshData();
+            saveAll();
+            overlay.classList.remove('active');
+            await updateFund(code);
             renderAll();
         });
     }
 
-    // ============================================================
-    //  配置备份
-    // ============================================================
     function setupBackup() {
         const overlay = document.getElementById('backupModalOverlay');
         const openBtn = document.getElementById('openBackupModalBtn');
@@ -1527,20 +1489,14 @@
         const exportBtn = document.getElementById('exportBtn');
         const importInput = document.getElementById('importFileInput');
 
-        openBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            overlay.classList.add('active');
-        });
-
-        function closeBackup() { overlay.classList.remove('active'); }
-        closeBtn.addEventListener('click', closeBackup);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeBackup();
-        });
+        openBtn.addEventListener('click', (e) => { e.stopPropagation();
+            overlay.classList.add('active'); });
+        closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
 
         exportBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const data = JSON.stringify(funds, null, 2);
+            const data = JSON.stringify({ holdings, cache }, null, 2);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1560,14 +1516,15 @@
             reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
-                    if (Array.isArray(data) && data.length > 0) {
-                        const confirmed = await showConfirm(`将导入 ${data.length} 只基金配置，覆盖当前所有数据，确定吗？`);
+                    if (data.holdings && typeof data.holdings === 'object') {
+                        const confirmed = await showConfirm(`将导入 ${Object.keys(data.holdings).length} 只基金配置，覆盖当前所有数据，确定吗？`);
                         if (confirmed) {
-                            funds = data;
-                            saveData();
-                            realtimeData = {};
+                            holdings = data.holdings || {};
+                            cache = data.cache || {};
+                            saveAll();
                             overlay.classList.remove('active');
-                            refreshData();
+                            await updateAll();
+                            renderAll();
                         }
                     } else {
                         await showAlert('配置格式无效，请检查文件');
@@ -1581,28 +1538,30 @@
         });
     }
 
-    // ============================================================
-    //  Service Worker 注册
-    // ============================================================
     function registerSW() {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(function(reg) {
-                    console.log('✅ Service Worker 注册成功');
-                })
-                .catch(function(err) {
-                    console.log('❌ Service Worker 注册失败', err);
-                });
+                .then(() => console.log('✅ Service Worker 注册成功'))
+                .catch((err) => console.log('❌ Service Worker 注册失败', err));
         }
     }
 
-    // ============================================================
-    //  启动
-    // ============================================================
+    // ===== 启动 =====
     document.addEventListener('DOMContentLoaded', function() {
         loadData();
-        if (funds.length > 0) {
-            refreshData().then(() => {
+        setupPrivacyEasterEgg();
+
+        document.getElementById('refreshBtn').addEventListener('click', async function() {
+            if (isUpdating) return;
+            showUpdating(true);
+            await updateAll();
+            showUpdating(false);
+            if (isTradingTime()) { stopAutoRefresh();
+                startAutoRefresh(); }
+        });
+
+        if (Object.keys(holdings).length > 0) {
+            updateAll().then(() => {
                 if (isTradingTime()) startAutoRefresh();
             });
         } else {
@@ -1610,10 +1569,7 @@
         }
         setupModal();
         setupBackup();
-        document.getElementById('refreshBtn').addEventListener('click', function() {
-            refreshData();
-            if (isTradingTime()) { stopAutoRefresh(); startAutoRefresh(); }
-        });
+
         setInterval(() => {
             if (isTradingTime() && !autoTimer) startAutoRefresh();
             if (!isTradingTime() && autoTimer) stopAutoRefresh();
