@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>📊 持仓跟踪</title>
+    <title>持仓跟踪</title>
 
     <!-- ===== PWA 配置 ===== -->
     <link rel="manifest" href="manifest.json" />
@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 样式（完整保留） ===== */
+        /* ===== 大卡片外壳 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -37,7 +37,6 @@
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
             padding: 14px 14px 20px;
-            min-height: 95vh;
             display: flex;
             flex-direction: column;
         }
@@ -224,6 +223,7 @@
             background: #fafcff;
         }
 
+        /* 装饰条：深蓝=净值，浅灰蓝=估值 */
         .fund-card::before {
             content: '';
             position: absolute;
@@ -498,15 +498,13 @@
         .add-modal .add-content .auto-fill-info.show {
             display: block;
         }
-        .add-modal .add-content .modal-actions,
-        .backup-modal .backup-actions {
+        .add-modal .add-content .modal-actions {
             display: flex;
             gap: 10px;
             width: 100%;
             justify-content: center;
         }
-        .add-modal .add-content .modal-actions button,
-        .backup-modal .backup-actions button {
+        .add-modal .add-content .modal-actions button {
             flex: 1;
             padding: 12px;
             border-radius: 14px;
@@ -537,30 +535,65 @@
             cursor: not-allowed;
         }
 
-        .backup-modal .backup-actions button {
+        /* ===== 数据管理：三个按钮统一毛玻璃 + 一行不换行 + 完整文字 ===== */
+        .backup-actions-grid {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 6px;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        .backup-actions-grid button,
+        .backup-actions-grid .file-input-wrap {
+            flex: 1 1 0;
+            min-width: 0;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.2;
+            transition: 0.15s;
+            cursor: pointer;
+            padding: 0;
         }
-        .backup-modal .backup-actions button:active {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(0.96);
-        }
-        .backup-modal .backup-actions button.primary {
-            background: rgba(255, 255, 255, 0.15);
+        .backup-actions-grid button {
+            padding: 10px 4px;
+            font-size: 12px;
+            font-weight: 600;
             color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .backup-modal .backup-actions button.primary:active {
-            background: rgba(255, 255, 255, 0.25);
-        }
-        .backup-modal .file-input-wrap {
+        .backup-actions-grid .file-input-wrap {
+            padding: 0;
             position: relative;
             overflow: hidden;
-            width: 100%;
         }
-        .backup-modal .file-input-wrap input[type="file"] {
+        .backup-actions-grid .file-input-wrap button {
+            width: 100%;
+            height: 100%;
+            padding: 10px 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+            background: transparent;
+            border: none;
+            backdrop-filter: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .backup-actions-grid .file-input-wrap input[type="file"] {
             position: absolute;
             left: 0;
             top: 0;
@@ -569,8 +602,14 @@
             height: 100%;
             cursor: pointer;
         }
+        .backup-actions-grid button:active,
+        .backup-actions-grid .file-input-wrap:active {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(0.96);
+        }
+
         .backup-modal .backup-close {
-            margin-top: 16px;
+            margin-top: 12px;
             background: transparent;
             border: none;
             color: rgba(255, 255, 255, 0.4);
@@ -712,6 +751,11 @@
             .add-modal .add-content,
             .backup-modal .backup-content { padding: 18px; }
             .add-modal .add-content .input-group input { font-size: 15px; padding: 10px 14px; }
+            .backup-actions-grid button,
+            .backup-actions-grid .file-input-wrap button {
+                font-size: 10px;
+                padding: 8px 2px;
+            }
         }
     </style>
 </head>
@@ -730,7 +774,7 @@
         </h1>
         <div class="header-actions">
             <button id="openAddModalBtn" title="添加基金"><i class="fas fa-plus-circle"></i></button>
-            <button id="openBackupModalBtn" title="配置备份"><i class="fas fa-cloud-upload-alt"></i></button>
+            <button id="openBackupModalBtn" title="数据管理"><i class="fas fa-database"></i></button>
             <button id="refreshBtn" title="刷新"><i class="fas fa-sync-alt"></i></button>
         </div>
     </header>
@@ -800,6 +844,7 @@
     </div>
 </div>
 
+<!-- ===== 添加基金 模态框 ===== -->
 <div class="modal-overlay add-modal" id="modalOverlay">
     <div class="add-content">
         <h2><i class="fas fa-coins" style="color:rgba(255,255,255,0.8);"></i> 添加基金</h2>
@@ -822,21 +867,24 @@
     </div>
 </div>
 
+<!-- ===== 数据管理 模态框 ===== -->
 <div class="modal-overlay backup-modal" id="backupModalOverlay">
     <div class="backup-content">
-        <h2><i class="fas fa-cloud-upload-alt"></i> 配置备份</h2>
-        <div class="sub">导出或导入你的持仓配置</div>
-        <div class="backup-actions">
+        <h2><i class="fas fa-database"></i> 数据管理</h2>
+        <div class="sub">导出配置、导入配置或清除缓存</div>
+        <div class="backup-actions-grid">
             <button id="exportBtn"><i class="fas fa-download"></i> 导出配置</button>
-            <button class="primary file-input-wrap">
-                <i class="fas fa-upload"></i> 导入配置
+            <div class="file-input-wrap">
+                <button class="primary"><i class="fas fa-upload"></i> 导入配置</button>
                 <input type="file" id="importFileInput" accept=".json" />
-            </button>
+            </div>
+            <button id="clearCacheBtn"><i class="fas fa-trash-alt"></i> 清除缓存</button>
         </div>
         <button class="backup-close" id="closeBackupModalBtn">关闭</button>
     </div>
 </div>
 
+<!-- ===== 通用提示 模态框 ===== -->
 <div class="modal-overlay prompt-modal" id="promptModalOverlay">
     <div class="prompt-content">
         <h2 id="promptTitle">提示</h2>
@@ -849,8 +897,7 @@
 
 <script>
     // ============================================================
-    //  数据源：天天基金（估值）+ 腾讯证券（净值/涨幅）
-    //  东方财富接口已全部删除
+    //  数据源：腾讯证券（净值优先）+ 天天基金（估值兜底）
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -896,12 +943,6 @@
         return m >= 555 && m < 915;
     }
 
-    function isNightFetchTime() {
-        const h = new Date().getHours();
-        return h >= 19 && h < 24;
-    }
-
-    // ===== 工具：校验基金名称 =====
     function isValidName(name) {
         if (!name) return false;
         if (typeof name !== 'string') return false;
@@ -917,9 +958,7 @@
         return code;
     }
 
-    // ============================================================
-    //  天天基金（盘中估值）
-    // ============================================================
+    // ===== 天天基金（盘中估值） =====
     function fetchTTFund(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
@@ -943,10 +982,7 @@
         });
     }
 
-    // ============================================================
-    //  腾讯证券（实际净值 + 当日涨幅）
-    //  字段说明：parts[1]=名称, parts[5]=今日净值, parts[7]=涨幅(%), parts[8]=日期
-    // ============================================================
+    // ===== 腾讯证券（实际净值） =====
     function fetchTencentNav(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
@@ -965,12 +1001,12 @@
                 const raw = window[varName];
                 if (raw && typeof raw === 'string') {
                     const parts = raw.split('~');
-                    const nav = parseFloat(parts[5]) || 0;      // 今日净值
-                    const rate = parseFloat(parts[7]) || 0;     // 当日涨幅（%）
-                    const date = parts[8] || '';                // 净值日期
+                    const nav = parseFloat(parts[5]) || 0;
+                    const rate = parseFloat(parts[7]) || 0;
+                    const date = parts[8] || '';
                     let name = parts[1] || '';
                     if (!isValidName(name)) name = code;
-                    if (nav > 0) {
+                    if (nav > 0 && date) {
                         resolve({ nav, rate, date, name });
                     } else {
                         resolve(null);
@@ -985,14 +1021,11 @@
         });
     }
 
-    // ============================================================
-    //  统一数据获取：天天基金（估值）→ 腾讯证券（净值）
-    // ============================================================
+    // ===== 统一数据获取 =====
     async function fetchFundDataOnly(code) {
         const today = new Date().toISOString().substring(0, 10);
         const d = cache[code] || {};
 
-        // 1️⃣ 检查缓存
         const cachedNav = parseFloat(d.actualNav);
         if (cachedNav > 0 && d.actualDate === today) {
             return {
@@ -1006,7 +1039,20 @@
             };
         }
 
-        // 2️⃣ 天天基金（盘中估值）
+        const txData = await fetchTencentNav(code);
+        if (txData && txData.nav > 0 && txData.date === today) {
+            const name = getValidName(txData.name, code);
+            return {
+                name: name,
+                nav: txData.nav,
+                changePercent: txData.rate,
+                navDate: txData.date,
+                gsz: txData.nav,
+                gszzl: txData.rate,
+                source: 'tencent'
+            };
+        }
+
         const ttData = await fetchTTFund(code);
         if (ttData) {
             let name = ttData.name || code;
@@ -1022,27 +1068,10 @@
             };
         }
 
-        // 3️⃣ 腾讯证券（实际净值 + 涨幅）
-        const txData = await fetchTencentNav(code);
-        if (txData) {
-            const name = getValidName(txData.name, code);
-            return {
-                name: name,
-                nav: txData.nav,
-                changePercent: txData.rate,
-                navDate: txData.date,
-                gsz: txData.nav,
-                gszzl: txData.rate,
-                source: 'tencent'
-            };
-        }
-
         return null;
     }
 
-    // ============================================================
-    //  更新单只基金
-    // ============================================================
+    // ===== 更新单只基金 =====
     async function updateFund(code) {
         const old = cache[code] || {};
         const data = await fetchFundDataOnly(code);
@@ -1050,17 +1079,29 @@
         if (data) {
             const name = getValidName(data.name, code);
             const today = new Date().toISOString().substring(0, 10);
-            const hasExisting = old.actualDate === today && parseFloat(old.actualNav) > 0;
 
-            cache[code] = {
-                name: name,
-                gsz: data.gsz || old.gsz || 0,
-                gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
-                actualNav: hasExisting ? old.actualNav : (data.nav ? String(data.nav) : old.actualNav),
-                actualRate: hasExisting ? old.actualRate : (data.changePercent !== undefined ? data.changePercent : old.actualRate),
-                actualDate: hasExisting ? old.actualDate : (data.navDate || old.actualDate || ''),
-                source: hasExisting ? old.source : (data.source || old.source || 'tt')
-            };
+            const hasExistingNav = old.actualDate === today && parseFloat(old.actualNav) > 0;
+            if (hasExistingNav) {
+                cache[code] = {
+                    name: name,
+                    gsz: data.gsz || old.gsz || 0,
+                    gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
+                    actualNav: old.actualNav,
+                    actualRate: old.actualRate,
+                    actualDate: old.actualDate,
+                    source: old.source || 'tencent'
+                };
+            } else {
+                cache[code] = {
+                    name: name,
+                    gsz: data.gsz || 0,
+                    gszzl: data.gszzl !== undefined ? data.gszzl : 0,
+                    actualNav: data.nav ? String(data.nav) : old.actualNav,
+                    actualRate: data.changePercent !== undefined ? data.changePercent : old.actualRate,
+                    actualDate: data.navDate || old.actualDate || '',
+                    source: data.source || old.source || 'tt'
+                };
+            }
         } else {
             if (!old.name) {
                 cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
@@ -1070,9 +1111,7 @@
         return cache[code];
     }
 
-    // ============================================================
-    //  并行更新
-    // ============================================================
+    // ===== 并行更新 =====
     async function silentUpdate() {
         try {
             const codes = Object.keys(holdings);
@@ -1102,64 +1141,29 @@
         });
     }
 
-    // ============================================================
-    //  晚间自动拉取
-    // ============================================================
-    let nightTimer = null;
+    // ===== 盘中自动刷新 =====
+    let autoTimer = null;
 
-    function startNightFetch() {
-        stopNightFetch();
-        if (!isNightFetchTime()) return;
-        const codes = Object.keys(holdings);
-        if (!codes.length) return;
-
-        const today = new Date().toISOString().substring(0, 10);
-        const allHaveData = codes.every(code => {
-            const d = cache[code] || {};
-            return d.actualDate === today && parseFloat(d.actualNav) > 0;
-        });
-        if (allHaveData) { stopNightFetch(); return; }
-
-        silentUpdate().then(() => {
-            const updated = Object.keys(holdings).every(code => {
-                const d = cache[code] || {};
-                return d.actualDate === today && parseFloat(d.actualNav) > 0;
-            });
-            if (updated) stopNightFetch();
-        });
-
-        nightTimer = setInterval(() => {
-            const codes2 = Object.keys(holdings);
-            if (!codes2.length) { stopNightFetch(); return; }
-            const today2 = new Date().toISOString().substring(0, 10);
-            const allDone = codes2.every(code => {
-                const d = cache[code] || {};
-                return d.actualDate === today2 && parseFloat(d.actualNav) > 0;
-            });
-            if (allDone) { stopNightFetch(); return; }
-            silentUpdate().then(() => {
-                const done = Object.keys(holdings).every(code => {
-                    const d = cache[code] || {};
-                    return d.actualDate === today2 && parseFloat(d.actualNav) > 0;
-                });
-                if (done) stopNightFetch();
-            });
-        }, 10 * 60 * 1000);
+    function startAutoRefresh() {
+        stopAutoRefresh();
+        if (!isTradingDay()) return;
+        if (isTradingTime()) refreshWithCache();
+        autoTimer = setInterval(() => {
+            if (isTradingTime()) refreshWithCache();
+            else stopAutoRefresh();
+        }, 60000);
     }
 
-    function stopNightFetch() {
-        if (nightTimer) { clearInterval(nightTimer);
-            nightTimer = null; }
+    function stopAutoRefresh() {
+        if (autoTimer) { clearInterval(autoTimer);
+            autoTimer = null; }
     }
 
-    // ============================================================
-    //  显示逻辑
-    // ============================================================
+    // ===== 显示逻辑 =====
     function getDisplay(code) {
         const d = cache[code] || {};
         const today = new Date().toISOString().slice(0, 10);
 
-        // 实际净值（来自腾讯证券）
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
             if (!isNaN(nav) && nav > 0) {
@@ -1171,7 +1175,6 @@
             }
         }
 
-        // 交易时段估值（来自天天基金）
         if (isTradingDay()) {
             const nav2 = parseFloat(d.gsz);
             if (!isNaN(nav2) && nav2 > 0) {
@@ -1179,7 +1182,6 @@
             }
         }
 
-        // 兜底：成本价
         const h = holdings[code] || {};
         const cost = parseFloat(h.cost) || 0;
         if (cost > 0) {
@@ -1223,9 +1225,7 @@
         });
     }
 
-    // ============================================================
-    //  隐私模式
-    // ============================================================
+    // ===== 隐私模式 =====
     function applyPrivacyMode() {
         const todayEl = document.getElementById('todayProfitBig');
         const totalAssetsEl = document.getElementById('totalAssets');
@@ -1269,9 +1269,7 @@
         });
     }
 
-    // ============================================================
-    //  渲染
-    // ============================================================
+    // ===== 渲染 =====
     function renderSummary() {
         if (privacyMode) return;
 
@@ -1423,9 +1421,7 @@
         renderFundList();
     }
 
-    // ============================================================
-    //  刷新状态（秒关）
-    // ============================================================
+    // ===== 刷新状态 =====
     function showUpdating(show) {
         const tip = document.getElementById('updatingTip');
         const btn = document.getElementById('refreshBtn');
@@ -1441,26 +1437,7 @@
         }
     }
 
-    let autoTimer = null;
-
-    function startAutoRefresh() {
-        stopAutoRefresh();
-        if (!isTradingDay()) return;
-        if (isTradingTime()) refreshWithCache();
-        autoTimer = setInterval(() => {
-            if (isTradingTime()) refreshWithCache();
-            else stopAutoRefresh();
-        }, 60000);
-    }
-
-    function stopAutoRefresh() {
-        if (autoTimer) { clearInterval(autoTimer);
-            autoTimer = null; }
-    }
-
-    // ============================================================
-    //  CRUD + 模态框
-    // ============================================================
+    // ===== CRUD =====
     async function deleteFund(code) {
         const confirmed = await showConfirm('确定要删除这只基金吗？');
         if (!confirmed) return;
@@ -1484,9 +1461,7 @@
         autoFillFromCode(code);
     }
 
-    // ============================================================
-    //  模态框工具
-    // ============================================================
+    // ===== 模态框工具 =====
     const promptOverlay = document.getElementById('promptModalOverlay');
     const promptTitle = document.getElementById('promptTitle');
     const promptMessage = document.getElementById('promptMessage');
@@ -1533,9 +1508,7 @@
 
     let currentFetchName = '';
 
-    // ============================================================
-    //  添加基金：只获取名称，不显示净值
-    // ============================================================
+    // ===== 添加基金：只获取名称 =====
     async function autoFillFromCode(code) {
         const infoBox = document.getElementById('autoFillInfo');
         const infoText = document.getElementById('autoFillText');
@@ -1550,7 +1523,6 @@
             const data = await fetchTTFund(code);
             if (data && data.name) {
                 currentFetchName = data.name;
-                // ✅ 只显示基金名称，不显示净值
                 infoText.textContent = `已识别：${data.name}`;
                 infoBox.style.borderColor = 'rgba(255,255,255,0.2)';
                 infoBox.classList.add('show');
@@ -1642,12 +1614,14 @@
         });
     }
 
+    // ===== 数据管理 =====
     function setupBackup() {
         const overlay = document.getElementById('backupModalOverlay');
         const openBtn = document.getElementById('openBackupModalBtn');
         const closeBtn = document.getElementById('closeBackupModalBtn');
         const exportBtn = document.getElementById('exportBtn');
         const importInput = document.getElementById('importFileInput');
+        const clearCacheBtn = document.getElementById('clearCacheBtn');
 
         openBtn.addEventListener('click', (e) => { e.stopPropagation();
             overlay.classList.add('active'); });
@@ -1695,6 +1669,18 @@
             reader.readAsText(file);
             this.value = '';
         });
+
+        clearCacheBtn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const confirmed = await showConfirm('确定要清除所有缓存数据吗？\n（持仓配置不会被删除）', '清除缓存');
+            if (confirmed) {
+                cache = {};
+                localStorage.setItem(STORAGE_C, JSON.stringify(cache));
+                overlay.classList.remove('active');
+                renderAll();
+                await showAlert('✅ 缓存已清除');
+            }
+        });
     }
 
     function registerSW() {
@@ -1729,7 +1715,6 @@
                     if (isTradingTime()) startAutoRefresh();
                 });
             }
-            startNightFetch();
         }
 
         setupModal();
@@ -1738,11 +1723,6 @@
         setInterval(() => {
             if (isTradingTime() && !autoTimer) startAutoRefresh();
             if (!isTradingTime() && autoTimer) stopAutoRefresh();
-            if (isNightFetchTime()) {
-                startNightFetch();
-            } else {
-                stopNightFetch();
-            }
         }, 30000);
         registerSW();
     });
