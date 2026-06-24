@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 样式部分（完整保留） ===== */
+        /* ===== 样式（完整保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -753,7 +753,6 @@
         <hr class="summary-divider" />
 
         <div class="summary-stats">
-            <!-- 总资产：钱包（带 ¥） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -766,7 +765,6 @@
                 <div class="stat-number neutral" id="totalAssets">0.00</div>
             </div>
 
-            <!-- 持有收益：上升趋势线 -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -778,7 +776,6 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
-            <!-- 总收益率：扇形图（饼图） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -852,8 +849,8 @@
 
 <script>
     // ============================================================
-    //  核心逻辑修复：缓存优先 + 并行请求 + 永不丢失数据
-    //  修复刷新乱跳问题，串行改并行（5-6只基金快很多）
+    //  核心逻辑修复：净值状态下今日盈亏/收益率正常显示
+    //  缓存优先 + 并行请求 + 数据永不丢失
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -1032,7 +1029,7 @@
     }
 
     // ============================================================
-    //  🔥 核心修复：缓存优先 + 永不丢失数据
+    //  🔥 核心修复：缓存优先 + 净值状态下 rate 正确传递
     // ============================================================
     async function fetchFundDataOnly(code) {
         const today = new Date().toISOString().substring(0, 10);
@@ -1066,7 +1063,7 @@
             };
         }
 
-        // 3️⃣ 东方财富失败 → 天天基金（盘中估值，盘后可能无数据）
+        // 3️⃣ 东方财富失败 → 天天基金（盘中估值）
         const ttData = await fetchTTFund(code);
         if (ttData) {
             let name = ttData.name || code;
@@ -1097,7 +1094,6 @@
             };
         }
 
-        // 5️⃣ 所有接口都失败，返回 null
         return null;
     }
 
@@ -1109,30 +1105,31 @@
         const data = await fetchFundDataOnly(code);
 
         if (data) {
-            // 有数据 → 更新缓存
             const name = getValidName(data.name, code);
+            // 🔥 关键：如果已有今日净值，不覆盖 actualNav/actualRate
+            const today = new Date().toISOString().substring(0, 10);
+            const hasExisting = old.actualDate === today && parseFloat(old.actualNav) > 0;
+
             cache[code] = {
                 name: name,
                 gsz: data.gsz || old.gsz || 0,
                 gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
-                actualNav: data.nav ? String(data.nav) : old.actualNav,
-                actualRate: data.changePercent !== undefined ? data.changePercent : old.actualRate,
-                actualDate: data.navDate || old.actualDate || '',
-                source: data.source || old.source || 'tt'
+                actualNav: hasExisting ? old.actualNav : (data.nav ? String(data.nav) : old.actualNav),
+                actualRate: hasExisting ? old.actualRate : (data.changePercent !== undefined ? data.changePercent : old.actualRate),
+                actualDate: hasExisting ? old.actualDate : (data.navDate || old.actualDate || ''),
+                source: hasExisting ? old.source : (data.source || old.source || 'tt')
             };
         } else {
-            // 没有数据 → 保留旧缓存（如果有），否则置空占位
             if (!old.name) {
                 cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
             }
-            // 如果有旧缓存，保留不变（不覆盖）
         }
         saveAll();
         return cache[code];
     }
 
     // ============================================================
-    //  并行更新所有基金（5-6只，很快）
+    //  并行更新所有基金
     // ============================================================
     async function silentUpdate() {
         try {
@@ -1156,10 +1153,7 @@
             isUpdating = false;
         }, 200);
 
-        // 先显示缓存（秒开）
         renderAll();
-
-        // 后台并行更新（不阻塞界面）
         silentUpdate().then(() => {
             if (isTradingTime()) { stopAutoRefresh();
                 startAutoRefresh(); }
@@ -1167,7 +1161,7 @@
     }
 
     // ============================================================
-    //  晚间自动拉取（并行）
+    //  晚间自动拉取
     // ============================================================
     let nightTimer = null;
 
@@ -1178,7 +1172,6 @@
         if (!codes.length) return;
 
         const today = new Date().toISOString().substring(0, 10);
-        // 检查是否所有基金都已拉到今日净值
         const allHaveData = codes.every(code => {
             const d = cache[code] || {};
             return d.actualDate === today && parseFloat(d.actualNav) > 0;
@@ -1218,7 +1211,7 @@
     }
 
     // ============================================================
-    //  显示逻辑
+    //  显示逻辑（🔥 核心修复：净值状态下 rate 正确传递）
     // ============================================================
     function getDisplay(code) {
         const d = cache[code] || {};
@@ -1228,7 +1221,9 @@
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
             if (!isNaN(nav) && nav > 0) {
-                return { nav: nav, rate: d.actualRate !== undefined ? parseFloat(d.actualRate) : null, source: 'actual' };
+                // 🔥 关键：从 d.actualRate 取值，确保 rate 不为 0
+                const rate = d.actualRate !== undefined ? parseFloat(d.actualRate) : 0;
+                return { nav: nav, rate: rate, source: 'actual' };
             }
         }
 
@@ -1236,11 +1231,11 @@
         if (isTradingDay()) {
             const nav2 = parseFloat(d.gsz);
             if (!isNaN(nav2) && nav2 > 0) {
-                return { nav: nav2, rate: d.gszzl !== undefined ? parseFloat(d.gszzl) : null, source: 'estimate' };
+                return { nav: nav2, rate: d.gszzl !== undefined ? parseFloat(d.gszzl) : 0, source: 'estimate' };
             }
         }
 
-        // 兜底：成本价（确保不显示 --）
+        // 兜底：成本价
         const h = holdings[code] || {};
         const cost = parseFloat(h.cost) || 0;
         if (cost > 0) {
@@ -1263,7 +1258,7 @@
             totalCost += cost * shares;
             const display = getDisplay(code);
             const nav = display.nav || cost;
-            const rate = display.rate !== null ? display.rate : 0;
+            const rate = display.rate || 0;
             const prev = rate !== 0 ? nav / (1 + rate / 100) : nav;
             const mv = nav * shares;
             totalMV += mv;
@@ -1417,7 +1412,7 @@
             const cost = parseFloat(h.cost) || 0;
             const shares = parseFloat(h.shares) || 0;
             const currentNav = display.nav || cost;
-            const rate = display.rate !== null ? display.rate : 0;
+            const rate = display.rate || 0;
             const prevNav = rate !== 0 ? currentNav / (1 + rate / 100) : currentNav;
             const marketValue = currentNav * shares;
             const todayProfit = (currentNav - prevNav) * shares;
@@ -1435,7 +1430,7 @@
             const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
             const sign = todayProfit >= 0 ? '+' : '';
 
-            // 修复：只要数据存在就显示，0 也显示 0.00
+            // 🔥 始终显示数值，不再隐藏
             const profitDisplay = sign + todayProfit.toFixed(2);
             const returnDisplay = sign + todayProfitRate.toFixed(2) + '%';
             const pClass = todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : 'neutral';
