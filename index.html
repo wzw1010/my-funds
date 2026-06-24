@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 样式部分（与上一版完全一致） ===== */
+        /* ===== 样式部分（完整保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -753,18 +753,20 @@
         <hr class="summary-divider" />
 
         <div class="summary-stats">
+            <!-- 总资产：钱包（带 ¥） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="4" y="14" width="16" height="8" rx="1" />
-                        <rect x="6" y="8" width="12" height="6" rx="1" />
-                        <rect x="8" y="2" width="8" height="6" rx="1" />
+                        <rect x="1" y="5" width="22" height="14" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                        <circle cx="17" cy="14" r="1.5" fill="rgba(255,255,255,0.3)" />
                     </svg>
                     <span class="stat-label">总资产</span>
                 </div>
                 <div class="stat-number neutral" id="totalAssets">0.00</div>
             </div>
 
+            <!-- 持有收益：上升趋势线 -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -776,6 +778,7 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
+            <!-- 总收益率：扇形图（饼图） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -849,11 +852,8 @@
 
 <script>
     // ============================================================
-    //  完整 JS 逻辑（修复基金名称显示问题）
-    //  东方财富优先 + 腾讯证券兜底
-    //  隐私模式 + 秒开缓存 + 启动加速
-    //  19:00 起每 10 分钟自动拉取净值（已拉到的跳过）
-    //  刷新秒关转圈，后台静默更新
+    //  核心逻辑修复：缓存优先 + 并行请求 + 永不丢失数据
+    //  修复刷新乱跳问题，串行改并行（5-6只基金快很多）
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -862,18 +862,15 @@
     let cache = {};
     let isUpdating = false;
     let privacyMode = false;
-    let fetchedToday = {};
 
     function loadData() {
         try { holdings = JSON.parse(localStorage.getItem(STORAGE_H)) || {}; } catch (e) { holdings = {}; }
         try { cache = JSON.parse(localStorage.getItem(STORAGE_C)) || {}; } catch (e) { cache = {}; }
-        try { fetchedToday = JSON.parse(localStorage.getItem('capsule_fetched_today')) || {}; } catch (e) { fetchedToday = {}; }
     }
 
     function saveAll() {
         localStorage.setItem(STORAGE_H, JSON.stringify(holdings));
         localStorage.setItem(STORAGE_C, JSON.stringify(cache));
-        localStorage.setItem('capsule_fetched_today', JSON.stringify(fetchedToday));
     }
     loadData();
 
@@ -907,26 +904,24 @@
         return h >= 19 && h < 24;
     }
 
-    // ===== 工具：校验基金名称是否有效 =====
+    // ===== 工具：校验基金名称 =====
     function isValidName(name) {
         if (!name) return false;
         if (typeof name !== 'string') return false;
         const trimmed = name.trim();
         if (trimmed.length < 2) return false;
-        // 排除明显乱码：全是数字、全是特殊符号、包含乱码特征
         if (/^[\d\s]+$/.test(trimmed)) return false;
         if (/^[．·\-_]+$/.test(trimmed)) return false;
         return true;
     }
 
-    // ===== 工具：获取有效的名称（兜底用 code） =====
     function getValidName(name, code) {
         if (isValidName(name)) return name.trim();
         return code;
     }
 
     // ============================================================
-    //  东方财富净值接口（JSONP）
+    //  数据获取接口
     // ============================================================
     function fetchEastmoneyNav(code) {
         return new Promise(function(resolve) {
@@ -951,11 +946,8 @@
                         const netValue = parseFloat(latest.DWJZ) || 0;
                         const todayStr = new Date().toISOString().substring(0, 10);
                         if (netDate === todayStr && !isNaN(dayChange) && netValue > 0) {
-                            // 从东方财富获取名称，并做校验
                             let name = data.Data.FundName || latest.SHORTNAME || latest.FSHORTNAME || '';
-                            if (!isValidName(name)) {
-                                name = code;
-                            }
+                            if (!isValidName(name)) name = code;
                             resolve({
                                 nav: netValue,
                                 rate: dayChange,
@@ -978,9 +970,6 @@
         });
     }
 
-    // ============================================================
-    //  天天基金估值（盘中估算）
-    // ============================================================
     function fetchTTFund(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
@@ -1004,9 +993,6 @@
         });
     }
 
-    // ============================================================
-    //  腾讯证券兜底（实际净值）
-    // ============================================================
     function fetchTencentNav(code) {
         return new Promise(function(resolve) {
             const script = document.createElement('script');
@@ -1046,40 +1032,31 @@
     }
 
     // ============================================================
-    //  统一数据获取（修复：缓存校验 + 名称校验）
+    //  🔥 核心修复：缓存优先 + 永不丢失数据
     // ============================================================
     async function fetchFundDataOnly(code) {
         const today = new Date().toISOString().substring(0, 10);
+        const d = cache[code] || {};
 
-        // 1. 检查是否已拉到今日净值（且缓存数据有效）
-        if (fetchedToday[code] === today) {
-            const d = cache[code] || {};
-            const nav = parseFloat(d.actualNav);
-            if (nav > 0 && d.actualDate === today) {
-                const name = getValidName(d.name, code);
-                return {
-                    name: name,
-                    nav: nav,
-                    changePercent: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
-                    navDate: today,
-                    gsz: nav,
-                    gszzl: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
-                    source: d.source || 'eastmoney'
-                };
-            } else {
-                delete fetchedToday[code];
-                saveAll();
-            }
+        // 1️⃣ 检查是否有今日有效缓存 → 直接返回，不请求任何接口
+        const cachedNav = parseFloat(d.actualNav);
+        if (cachedNav > 0 && d.actualDate === today) {
+            return {
+                name: getValidName(d.name, code),
+                nav: cachedNav,
+                changePercent: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
+                navDate: today,
+                gsz: cachedNav,
+                gszzl: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
+                source: d.source || 'cache'
+            };
         }
 
-        // 2. 先查东方财富
+        // 2️⃣ 缓存无效 → 去请求东方财富
         const emData = await fetchEastmoneyNav(code);
         if (emData) {
-            fetchedToday[code] = today;
-            saveAll();
-            const name = getValidName(emData.name, code);
             return {
-                name: name,
+                name: getValidName(emData.name, code),
                 nav: emData.nav,
                 changePercent: emData.rate,
                 navDate: emData.date,
@@ -1089,7 +1066,7 @@
             };
         }
 
-        // 3. 回退到天天基金（盘中估值）
+        // 3️⃣ 东方财富失败 → 天天基金（盘中估值，盘后可能无数据）
         const ttData = await fetchTTFund(code);
         if (ttData) {
             let name = ttData.name || code;
@@ -1105,7 +1082,7 @@
             };
         }
 
-        // 4. 腾讯证券兜底
+        // 4️⃣ 腾讯证券兜底
         const txData = await fetchTencentNav(code);
         if (txData) {
             const name = getValidName(txData.name, code);
@@ -1120,16 +1097,19 @@
             };
         }
 
+        // 5️⃣ 所有接口都失败，返回 null
         return null;
     }
 
     // ============================================================
-    //  更新单只基金
+    //  更新单只基金（保留旧数据，不覆盖）
     // ============================================================
     async function updateFund(code) {
         const old = cache[code] || {};
         const data = await fetchFundDataOnly(code);
+
         if (data) {
+            // 有数据 → 更新缓存
             const name = getValidName(data.name, code);
             cache[code] = {
                 name: name,
@@ -1141,16 +1121,18 @@
                 source: data.source || old.source || 'tt'
             };
         } else {
+            // 没有数据 → 保留旧缓存（如果有），否则置空占位
             if (!old.name) {
                 cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
             }
+            // 如果有旧缓存，保留不变（不覆盖）
         }
         saveAll();
         return cache[code];
     }
 
     // ============================================================
-    //  后台静默更新 + 秒开刷新
+    //  并行更新所有基金（5-6只，很快）
     // ============================================================
     async function silentUpdate() {
         try {
@@ -1174,7 +1156,10 @@
             isUpdating = false;
         }, 200);
 
+        // 先显示缓存（秒开）
         renderAll();
+
+        // 后台并行更新（不阻塞界面）
         silentUpdate().then(() => {
             if (isTradingTime()) { stopAutoRefresh();
                 startAutoRefresh(); }
@@ -1182,7 +1167,7 @@
     }
 
     // ============================================================
-    //  晚间自动拉取净值
+    //  晚间自动拉取（并行）
     // ============================================================
     let nightTimer = null;
 
@@ -1191,9 +1176,14 @@
         if (!isNightFetchTime()) return;
         const codes = Object.keys(holdings);
         if (!codes.length) return;
+
         const today = new Date().toISOString().substring(0, 10);
-        const allFetched = codes.every(code => fetchedToday[code] === today);
-        if (allFetched) { stopNightFetch(); return; }
+        // 检查是否所有基金都已拉到今日净值
+        const allHaveData = codes.every(code => {
+            const d = cache[code] || {};
+            return d.actualDate === today && parseFloat(d.actualNav) > 0;
+        });
+        if (allHaveData) { stopNightFetch(); return; }
 
         silentUpdate().then(() => {
             const updated = Object.keys(holdings).every(code => {
@@ -1207,14 +1197,17 @@
             const codes2 = Object.keys(holdings);
             if (!codes2.length) { stopNightFetch(); return; }
             const today2 = new Date().toISOString().substring(0, 10);
-            const allFetched2 = codes2.every(code => fetchedToday[code] === today2);
-            if (allFetched2) { stopNightFetch(); return; }
+            const allDone = codes2.every(code => {
+                const d = cache[code] || {};
+                return d.actualDate === today2 && parseFloat(d.actualNav) > 0;
+            });
+            if (allDone) { stopNightFetch(); return; }
             silentUpdate().then(() => {
-                const updated2 = Object.keys(holdings).every(code => {
+                const done = Object.keys(holdings).every(code => {
                     const d = cache[code] || {};
                     return d.actualDate === today2 && parseFloat(d.actualNav) > 0;
                 });
-                if (updated2) stopNightFetch();
+                if (done) stopNightFetch();
             });
         }, 10 * 60 * 1000);
     }
@@ -1231,6 +1224,7 @@
         const d = cache[code] || {};
         const today = new Date().toISOString().slice(0, 10);
 
+        // 优先：已更新的实际净值
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
             if (!isNaN(nav) && nav > 0) {
@@ -1238,6 +1232,7 @@
             }
         }
 
+        // 交易时段使用估值
         if (isTradingDay()) {
             const nav2 = parseFloat(d.gsz);
             if (!isNaN(nav2) && nav2 > 0) {
@@ -1245,10 +1240,13 @@
             }
         }
 
-        const nav3 = parseFloat(d.actualNav) || parseFloat(d.gsz) || 0;
-        if (nav3 > 0) {
-            return { nav: nav3, rate: d.actualRate !== undefined ? parseFloat(d.actualRate) : null, source: 'fallback' };
+        // 兜底：成本价（确保不显示 --）
+        const h = holdings[code] || {};
+        const cost = parseFloat(h.cost) || 0;
+        if (cost > 0) {
+            return { nav: cost, rate: 0, source: 'cost' };
         }
+
         return { nav: null, rate: null, source: 'none' };
     }
 
@@ -1264,13 +1262,12 @@
             const shares = parseFloat(h.shares) || 0;
             totalCost += cost * shares;
             const display = getDisplay(code);
-            if (display.nav) {
-                const mv = display.nav * shares;
-                totalMV += mv;
-                const rate = display.rate !== null ? display.rate / 100 : 0;
-                const prev = rate !== 0 ? display.nav / (1 + rate) : display.nav;
-                todayProfit += shares * prev * rate;
-            }
+            const nav = display.nav || cost;
+            const rate = display.rate !== null ? display.rate : 0;
+            const prev = rate !== 0 ? nav / (1 + rate / 100) : nav;
+            const mv = nav * shares;
+            totalMV += mv;
+            todayProfit += (nav - prev) * shares;
         });
         const totalProfit = totalMV - totalCost;
         const totalYield = totalCost > 0 ? (totalProfit / totalCost * 100) : 0;
@@ -1426,13 +1423,10 @@
             const todayProfit = (currentNav - prevNav) * shares;
             const todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
 
-            // 使用 getValidName 确保名称有效
             let name = getValidName(d.name, code);
-            // 如果 d.name 无效但 h.name 有效，用 h.name
             if (!isValidName(name) && isValidName(h.name)) {
                 name = h.name;
             }
-            // 最终兜底：code
             if (!isValidName(name)) {
                 name = code;
             }
@@ -1441,8 +1435,9 @@
             const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
             const sign = todayProfit >= 0 ? '+' : '';
 
-            const profitDisplay = todayProfit !== 0 ? sign + todayProfit.toFixed(2) : '--';
-            const returnDisplay = todayProfitRate !== 0 ? sign + todayProfitRate.toFixed(2) + '%' : '--';
+            // 修复：只要数据存在就显示，0 也显示 0.00
+            const profitDisplay = sign + todayProfit.toFixed(2);
+            const returnDisplay = sign + todayProfitRate.toFixed(2) + '%';
             const pClass = todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : 'neutral';
             const rClass = todayProfitRate > 0 ? 'positive' : todayProfitRate < 0 ? 'negative' : 'neutral';
 
@@ -1527,7 +1522,6 @@
         if (!confirmed) return;
         delete holdings[code];
         delete cache[code];
-        delete fetchedToday[code];
         saveAll();
         renderAll();
     }
@@ -1685,7 +1679,6 @@
                 if (editCode !== code) {
                     delete holdings[editCode];
                     delete cache[editCode];
-                    delete fetchedToday[editCode];
                 }
                 holdings[code] = { cost, shares, name };
             } else {
@@ -1716,7 +1709,7 @@
 
         exportBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const data = JSON.stringify({ holdings, cache, fetchedToday }, null, 2);
+            const data = JSON.stringify({ holdings, cache }, null, 2);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1741,7 +1734,6 @@
                         if (confirmed) {
                             holdings = data.holdings || {};
                             cache = data.cache || {};
-                            fetchedToday = data.fetchedToday || {};
                             saveAll();
                             overlay.classList.remove('active');
                             await refreshWithCache();
