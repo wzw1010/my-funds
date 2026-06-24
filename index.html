@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== 大卡片外壳 ===== */
+        /* ===== 样式部分（与上一版完全一致） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -42,7 +42,6 @@
             flex-direction: column;
         }
 
-        /* ===== 顶部导航栏 ===== */
         .app-header {
             display: flex;
             justify-content: space-between;
@@ -89,7 +88,6 @@
             font-size: 16px;
         }
 
-        /* ===== 合并后的汇总卡片 ===== */
         .summary-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
             border-radius: 20px;
@@ -197,7 +195,6 @@
         .stat-number.negative { color: #2A9D8F; }
         .stat-number.neutral { color: #94a3b8; }
 
-        /* ===== 基金列表 ===== */
         .fund-list {
             display: flex;
             flex-direction: column;
@@ -207,7 +204,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* ===== 基金卡片 ===== */
         .fund-card {
             background: #ffffff;
             border-radius: 14px;
@@ -228,7 +224,6 @@
             background: #fafcff;
         }
 
-        /* ===== 装饰条：青色 → 深蓝渐变（顶部大卡片颜色） ===== */
         .fund-card::before {
             content: '';
             position: absolute;
@@ -240,10 +235,10 @@
             transition: background 0.3s;
         }
         .fund-card.decor-actual::before {
-            background: #132b4a;  /* 顶部大卡片深蓝色 */
+            background: #132b4a;
         }
         .fund-card.decor-estimate::before {
-            background: #8aabb8;  /* 浅灰蓝保持不变 */
+            background: #8aabb8;
         }
 
         .fund-card .fund-content {
@@ -382,7 +377,6 @@
             opacity: 0.5;
         }
 
-        /* ===== 空状态 ===== */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -403,7 +397,6 @@
             margin-top: 2px;
         }
 
-        /* ===== 模态框 ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -423,7 +416,6 @@
             display: flex;
         }
 
-        /* 添加持仓 和 配置备份 模态框风格统一 */
         .add-modal .add-content,
         .backup-modal .backup-content {
             display: flex;
@@ -545,7 +537,6 @@
             cursor: not-allowed;
         }
 
-        /* 备份弹窗按钮统一为半透明风格（和导出配置一致） */
         .backup-modal .backup-actions button {
             background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
@@ -668,7 +659,6 @@
             border-radius: 10px;
         }
 
-        /* ===== 刷新加载状态（秒关） ===== */
         .refresh-loading {
             pointer-events: none;
             opacity: 0.6;
@@ -681,7 +671,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ===== 更新中… 提示（保留，但只在后台默默工作） ===== */
         .updating-tip {
             text-align: center;
             font-size: 12px;
@@ -696,7 +685,6 @@
             margin-right: 4px;
         }
 
-        /* ===== 移动端适配 ===== */
         @media (max-width: 420px) {
             .app-container { padding: 10px 12px 16px; }
             .summary-card { padding: 12px 14px 10px 14px; }
@@ -730,7 +718,6 @@
 <body>
 <div class="app-container" id="app">
 
-    <!-- ===== 顶部导航栏 ===== -->
     <header class="app-header">
         <h1>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -748,12 +735,10 @@
         </div>
     </header>
 
-    <!-- ===== 更新中… 提示（后台静默时显示） ===== -->
     <div class="updating-tip" id="updatingTip">
         <i class="fas fa-spinner fa-spin"></i> 更新中…
     </div>
 
-    <!-- ===== 汇总卡片（图标已升级） ===== -->
     <section class="summary-card" id="summaryCard">
         <div class="summary-today">
             <span class="today-label" id="todayLabel">
@@ -768,7 +753,6 @@
         <hr class="summary-divider" />
 
         <div class="summary-stats">
-            <!-- 总资产：堆叠方块（三层） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -781,7 +765,6 @@
                 <div class="stat-number neutral" id="totalAssets">0.00</div>
             </div>
 
-            <!-- 持有收益：上升趋势线（保持） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -793,7 +776,6 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
-            <!-- 总收益率：扇形图（饼图） -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -809,7 +791,6 @@
         </div>
     </section>
 
-    <!-- ===== 基金列表 ===== -->
     <div class="fund-list" id="fundList">
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
@@ -819,7 +800,6 @@
     </div>
 </div>
 
-<!-- ===== 添加基金 模态框 ===== -->
 <div class="modal-overlay add-modal" id="modalOverlay">
     <div class="add-content">
         <h2><i class="fas fa-coins" style="color:rgba(255,255,255,0.8);"></i> 添加基金</h2>
@@ -842,7 +822,6 @@
     </div>
 </div>
 
-<!-- ===== 配置备份 模态框（风格统一，按钮半透明） ===== -->
 <div class="modal-overlay backup-modal" id="backupModalOverlay">
     <div class="backup-content">
         <h2><i class="fas fa-cloud-upload-alt"></i> 配置备份</h2>
@@ -858,7 +837,6 @@
     </div>
 </div>
 
-<!-- ===== 通用提示 模态框 ===== -->
 <div class="modal-overlay prompt-modal" id="promptModalOverlay">
     <div class="prompt-content">
         <h2 id="promptTitle">提示</h2>
@@ -871,7 +849,7 @@
 
 <script>
     // ============================================================
-    //  完整 JS 逻辑
+    //  完整 JS 逻辑（修复基金名称显示问题）
     //  东方财富优先 + 腾讯证券兜底
     //  隐私模式 + 秒开缓存 + 启动加速
     //  19:00 起每 10 分钟自动拉取净值（已拉到的跳过）
@@ -884,14 +862,11 @@
     let cache = {};
     let isUpdating = false;
     let privacyMode = false;
-
-    // 记录已拉取到今日净值的基金，避免重复请求
     let fetchedToday = {};
 
     function loadData() {
         try { holdings = JSON.parse(localStorage.getItem(STORAGE_H)) || {}; } catch (e) { holdings = {}; }
         try { cache = JSON.parse(localStorage.getItem(STORAGE_C)) || {}; } catch (e) { cache = {}; }
-        // 加载已拉取记录
         try { fetchedToday = JSON.parse(localStorage.getItem('capsule_fetched_today')) || {}; } catch (e) { fetchedToday = {}; }
     }
 
@@ -927,10 +902,27 @@
         return m >= 555 && m < 915;
     }
 
-    // 判断是否在晚间自动拉取时段（19:00 开始）
     function isNightFetchTime() {
         const h = new Date().getHours();
         return h >= 19 && h < 24;
+    }
+
+    // ===== 工具：校验基金名称是否有效 =====
+    function isValidName(name) {
+        if (!name) return false;
+        if (typeof name !== 'string') return false;
+        const trimmed = name.trim();
+        if (trimmed.length < 2) return false;
+        // 排除明显乱码：全是数字、全是特殊符号、包含乱码特征
+        if (/^[\d\s]+$/.test(trimmed)) return false;
+        if (/^[．·\-_]+$/.test(trimmed)) return false;
+        return true;
+    }
+
+    // ===== 工具：获取有效的名称（兜底用 code） =====
+    function getValidName(name, code) {
+        if (isValidName(name)) return name.trim();
+        return code;
     }
 
     // ============================================================
@@ -959,11 +951,16 @@
                         const netValue = parseFloat(latest.DWJZ) || 0;
                         const todayStr = new Date().toISOString().substring(0, 10);
                         if (netDate === todayStr && !isNaN(dayChange) && netValue > 0) {
+                            // 从东方财富获取名称，并做校验
+                            let name = data.Data.FundName || latest.SHORTNAME || latest.FSHORTNAME || '';
+                            if (!isValidName(name)) {
+                                name = code;
+                            }
                             resolve({
                                 nav: netValue,
                                 rate: dayChange,
                                 date: netDate,
-                                name: data.Data.FundName || latest.SHORTNAME || ''
+                                name: name
                             });
                             return;
                         }
@@ -1031,7 +1028,8 @@
                     const nav = parseFloat(parts[5]) || 0;
                     const rate = parseFloat(parts[2]) || 0;
                     const date = parts[8] || '';
-                    const name = parts[1] || '';
+                    let name = parts[1] || '';
+                    if (!isValidName(name)) name = code;
                     if (nav > 0) {
                         resolve({ nav, rate, date, name });
                     } else {
@@ -1048,52 +1046,56 @@
     }
 
     // ============================================================
-    //  统一数据获取：东方财富优先 → 天天基金估值 → 腾讯兜底
+    //  统一数据获取（修复：缓存校验 + 名称校验）
     // ============================================================
-    async function fetchFundDataOnly(code, skipEastmoney = false) {
+    async function fetchFundDataOnly(code) {
         const today = new Date().toISOString().substring(0, 10);
 
-        // 1. 检查是否已拉到今日净值（避免重复请求）
+        // 1. 检查是否已拉到今日净值（且缓存数据有效）
         if (fetchedToday[code] === today) {
-            // 直接从缓存返回
             const d = cache[code] || {};
-            if (d.source === 'eastmoney' && d.actualDate === today) {
+            const nav = parseFloat(d.actualNav);
+            if (nav > 0 && d.actualDate === today) {
+                const name = getValidName(d.name, code);
                 return {
-                    name: d.name || code,
-                    nav: parseFloat(d.actualNav) || 0,
-                    changePercent: d.actualRate || 0,
+                    name: name,
+                    nav: nav,
+                    changePercent: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
                     navDate: today,
-                    gsz: parseFloat(d.actualNav) || 0,
-                    gszzl: d.actualRate || 0,
-                    source: 'eastmoney'
+                    gsz: nav,
+                    gszzl: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
+                    source: d.source || 'eastmoney'
                 };
+            } else {
+                delete fetchedToday[code];
+                saveAll();
             }
         }
 
         // 2. 先查东方财富
-        if (!skipEastmoney) {
-            const emData = await fetchEastmoneyNav(code);
-            if (emData) {
-                // 记录已拉取
-                fetchedToday[code] = today;
-                saveAll();
-                return {
-                    name: emData.name || code,
-                    nav: emData.nav,
-                    changePercent: emData.rate,
-                    navDate: emData.date,
-                    gsz: emData.nav,
-                    gszzl: emData.rate,
-                    source: 'eastmoney'
-                };
-            }
+        const emData = await fetchEastmoneyNav(code);
+        if (emData) {
+            fetchedToday[code] = today;
+            saveAll();
+            const name = getValidName(emData.name, code);
+            return {
+                name: name,
+                nav: emData.nav,
+                changePercent: emData.rate,
+                navDate: emData.date,
+                gsz: emData.nav,
+                gszzl: emData.rate,
+                source: 'eastmoney'
+            };
         }
 
         // 3. 回退到天天基金（盘中估值）
         const ttData = await fetchTTFund(code);
         if (ttData) {
+            let name = ttData.name || code;
+            if (!isValidName(name)) name = code;
             return {
-                name: ttData.name || code,
+                name: name,
                 gsz: parseFloat(ttData.gsz) || 0,
                 gszzl: parseFloat(ttData.gszzl) || 0,
                 nav: parseFloat(ttData.dwjz) || 0,
@@ -1106,8 +1108,9 @@
         // 4. 腾讯证券兜底
         const txData = await fetchTencentNav(code);
         if (txData) {
+            const name = getValidName(txData.name, code);
             return {
-                name: txData.name || code,
+                name: name,
                 nav: txData.nav,
                 changePercent: txData.rate,
                 navDate: txData.date,
@@ -1123,12 +1126,13 @@
     // ============================================================
     //  更新单只基金
     // ============================================================
-    async function updateFund(code, skipEastmoney = false) {
+    async function updateFund(code) {
         const old = cache[code] || {};
-        const data = await fetchFundDataOnly(code, skipEastmoney);
+        const data = await fetchFundDataOnly(code);
         if (data) {
+            const name = getValidName(data.name, code);
             cache[code] = {
-                name: data.name || old.name || code,
+                name: name,
                 gsz: data.gsz || old.gsz || 0,
                 gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
                 actualNav: data.nav ? String(data.nav) : old.actualNav,
@@ -1148,12 +1152,11 @@
     // ============================================================
     //  后台静默更新 + 秒开刷新
     // ============================================================
-    async function silentUpdate(options = {}) {
-        const { skipEastmoney = false } = options;
+    async function silentUpdate() {
         try {
             const codes = Object.keys(holdings);
             if (codes.length) {
-                await Promise.all(codes.map(code => updateFund(code, skipEastmoney)));
+                await Promise.all(codes.map(code => updateFund(code)));
                 renderAll();
             }
         } catch (e) {
@@ -1165,18 +1168,13 @@
         if (isUpdating) return;
         isUpdating = true;
 
-        // ✅ 秒关转圈：立即消失，给用户“已刷新”的感觉
         showUpdating(true);
-        // 100ms 后关闭转圈
         setTimeout(() => {
             showUpdating(false);
             isUpdating = false;
         }, 200);
 
-        // 立即显示缓存
         renderAll();
-
-        // 后台静默更新（不等待）
         silentUpdate().then(() => {
             if (isTradingTime()) { stopAutoRefresh();
                 startAutoRefresh(); }
@@ -1184,60 +1182,41 @@
     }
 
     // ============================================================
-    //  晚间自动拉取净值（19:00 起每 10 分钟）
+    //  晚间自动拉取净值
     // ============================================================
     let nightTimer = null;
 
     function startNightFetch() {
         stopNightFetch();
         if (!isNightFetchTime()) return;
-
-        // 先检查是否所有基金都已拉到今日净值
         const codes = Object.keys(holdings);
         if (!codes.length) return;
-
         const today = new Date().toISOString().substring(0, 10);
         const allFetched = codes.every(code => fetchedToday[code] === today);
-        if (allFetched) {
-            // 全部已拉取，停止夜间定时器
-            stopNightFetch();
-            return;
-        }
+        if (allFetched) { stopNightFetch(); return; }
 
-        // 执行一次拉取
-        silentUpdate({ skipEastmoney: false }).then(() => {
-            // 拉取完后检查是否全部已更新
+        silentUpdate().then(() => {
             const updated = Object.keys(holdings).every(code => {
                 const d = cache[code] || {};
                 return d.actualDate === today && parseFloat(d.actualNav) > 0;
             });
-            if (updated) {
-                stopNightFetch();
-            }
+            if (updated) stopNightFetch();
         });
 
-        // 每 10 分钟执行一次
         nightTimer = setInterval(() => {
             const codes2 = Object.keys(holdings);
             if (!codes2.length) { stopNightFetch(); return; }
-
             const today2 = new Date().toISOString().substring(0, 10);
             const allFetched2 = codes2.every(code => fetchedToday[code] === today2);
-            if (allFetched2) {
-                stopNightFetch();
-                return;
-            }
-
-            silentUpdate({ skipEastmoney: false }).then(() => {
+            if (allFetched2) { stopNightFetch(); return; }
+            silentUpdate().then(() => {
                 const updated2 = Object.keys(holdings).every(code => {
                     const d = cache[code] || {};
                     return d.actualDate === today2 && parseFloat(d.actualNav) > 0;
                 });
-                if (updated2) {
-                    stopNightFetch();
-                }
+                if (updated2) stopNightFetch();
             });
-        }, 10 * 60 * 1000); // 10 分钟
+        }, 10 * 60 * 1000);
     }
 
     function stopNightFetch() {
@@ -1251,14 +1230,6 @@
     function getDisplay(code) {
         const d = cache[code] || {};
         const today = new Date().toISOString().slice(0, 10);
-
-        // 优先使用东方财富实际净值
-        if (d.source === 'eastmoney' && d.actualDate === today) {
-            const nav = parseFloat(d.actualNav);
-            if (!isNaN(nav) && nav > 0) {
-                return { nav: nav, rate: d.actualRate !== undefined ? parseFloat(d.actualRate) : null, source: 'actual' };
-            }
-        }
 
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
@@ -1455,17 +1426,25 @@
             const todayProfit = (currentNav - prevNav) * shares;
             const todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
 
-            // 装饰条：实际 → 深蓝（顶部大卡片颜色），估算 → 浅灰蓝
+            // 使用 getValidName 确保名称有效
+            let name = getValidName(d.name, code);
+            // 如果 d.name 无效但 h.name 有效，用 h.name
+            if (!isValidName(name) && isValidName(h.name)) {
+                name = h.name;
+            }
+            // 最终兜底：code
+            if (!isValidName(name)) {
+                name = code;
+            }
+
             const isActual = display.source === 'actual';
             const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
-
             const sign = todayProfit >= 0 ? '+' : '';
 
             const profitDisplay = todayProfit !== 0 ? sign + todayProfit.toFixed(2) : '--';
             const returnDisplay = todayProfitRate !== 0 ? sign + todayProfitRate.toFixed(2) + '%' : '--';
             const pClass = todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : 'neutral';
             const rClass = todayProfitRate > 0 ? 'positive' : todayProfitRate < 0 ? 'negative' : 'neutral';
-            const name = d.name || h.name || code;
 
             html += `
                 <div class="fund-card ${decorClass}" data-code="${code}">
@@ -1794,12 +1773,10 @@
         loadData();
         setupPrivacyEasterEgg();
 
-        // 刷新按钮 → 秒关转圈 + 后台静默更新
         document.getElementById('refreshBtn').addEventListener('click', function() {
             refreshWithCache();
         });
 
-        // 立即显示缓存
         renderAll();
 
         if (Object.keys(holdings).length > 0) {
@@ -1813,18 +1790,15 @@
                     if (isTradingTime()) startAutoRefresh();
                 });
             }
-            // 启动晚间自动拉取
             startNightFetch();
         }
 
         setupModal();
         setupBackup();
 
-        // 定时检查是否进入晚间时段
         setInterval(() => {
             if (isTradingTime() && !autoTimer) startAutoRefresh();
             if (!isTradingTime() && autoTimer) stopAutoRefresh();
-            // 晚间自动拉取
             if (isNightFetchTime()) {
                 startNightFetch();
             } else {
