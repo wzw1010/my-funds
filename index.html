@@ -882,7 +882,7 @@
 
 <script>
     // ============================================================
-    //  完整 JS 逻辑 + 隐私模式彩蛋
+    //  完整 JS 逻辑 + 隐私模式彩蛋 + 秒开缓存 + 启动加速
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -1022,11 +1022,35 @@
         return cache[code];
     }
 
-    async function updateAll() {
-        const codes = Object.keys(holdings);
-        if (!codes.length) return;
-        await Promise.all(codes.map(code => updateFund(code)));
+    // ===== 后台静默更新（不阻塞界面） =====
+    async function silentUpdate() {
+        try {
+            const codes = Object.keys(holdings);
+            if (codes.length) {
+                await Promise.all(codes.map(code => updateFund(code)));
+                renderAll();
+            }
+        } catch (e) {
+            console.warn('后台更新失败，数据保持不变', e);
+        }
+    }
+
+    // ===== 秒开刷新：先显示缓存，再静默更新 =====
+    async function refreshWithCache() {
+        if (isUpdating) return;
+        isUpdating = true;
+        showUpdating(true);
+
+        // 1. 立即用缓存渲染（秒开）
         renderAll();
+
+        // 2. 后台静默更新
+        await silentUpdate();
+
+        showUpdating(false);
+        isUpdating = false;
+        if (isTradingTime()) { stopAutoRefresh();
+            startAutoRefresh(); }
     }
 
     function getDisplay(code) {
@@ -1163,7 +1187,7 @@
             label.innerHTML = icon + (isAllUpdated ? '今日实际盈亏' : '今日预估盈亏');
         }
 
-        const setStat = (id, val, isPct, isProfit) => {
+        const setStat = (id, val, isPct) => {
             const el = document.getElementById(id);
             if (codes.length === 0) {
                 el.textContent = isPct ? '0.00%' : '0.00';
@@ -1285,7 +1309,6 @@
             btn.classList.remove('refresh-loading');
             icon.className = 'fas fa-sync-alt';
         }
-        isUpdating = show;
     }
 
     let autoTimer = null;
@@ -1293,9 +1316,9 @@
     function startAutoRefresh() {
         stopAutoRefresh();
         if (!isTradingDay()) return;
-        if (isTradingTime()) updateAll();
+        if (isTradingTime()) refreshWithCache();
         autoTimer = setInterval(() => {
-            if (isTradingTime()) updateAll();
+            if (isTradingTime()) refreshWithCache();
             else stopAutoRefresh();
         }, 60000);
     }
@@ -1523,8 +1546,7 @@
                             cache = data.cache || {};
                             saveAll();
                             overlay.classList.remove('active');
-                            await updateAll();
-                            renderAll();
+                            await refreshWithCache();
                         }
                     } else {
                         await showAlert('配置格式无效，请检查文件');
@@ -1546,30 +1568,42 @@
         }
     }
 
-    // ===== 启动 =====
+    // ============================================================
+    //  🚀 启动：先秒开缓存，再静默更新
+    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         loadData();
         setupPrivacyEasterEgg();
 
-        document.getElementById('refreshBtn').addEventListener('click', async function() {
-            if (isUpdating) return;
-            showUpdating(true);
-            await updateAll();
-            showUpdating(false);
-            if (isTradingTime()) { stopAutoRefresh();
-                startAutoRefresh(); }
+        // 刷新按钮：秒开 + 静默更新
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            refreshWithCache();
         });
 
+        // 1️⃣ 立即显示缓存数据（秒开）
+        renderAll();
+
+        // 2️⃣ 如果有持仓，后台静默更新
         if (Object.keys(holdings).length > 0) {
-            updateAll().then(() => {
-                if (isTradingTime()) startAutoRefresh();
-            });
-        } else {
-            renderAll();
+            // 先检查是否有缓存数据，如果没有则立即强制拉取一次
+            const hasCache = Object.keys(cache).length > 0;
+            if (!hasCache) {
+                // 没有缓存，直接拉取
+                refreshWithCache().then(() => {
+                    if (isTradingTime()) startAutoRefresh();
+                });
+            } else {
+                // 有缓存，后台静默更新
+                silentUpdate().then(() => {
+                    if (isTradingTime()) startAutoRefresh();
+                });
+            }
         }
+
         setupModal();
         setupBackup();
 
+        // 定时刷新
         setInterval(() => {
             if (isTradingTime() && !autoTimer) startAutoRefresh();
             if (!isTradingTime() && autoTimer) stopAutoRefresh();
