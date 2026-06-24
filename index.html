@@ -849,8 +849,8 @@
 
 <script>
     // ============================================================
-    //  核心逻辑修复：净值状态下今日盈亏/收益率正常显示
-    //  缓存优先 + 并行请求 + 数据永不丢失
+    //  核心逻辑修复：强制显示今日盈亏和收益率
+    //  增加 NaN 保护 + 反推涨跌幅
     // ============================================================
 
     const STORAGE_H = 'capsule_holdings';
@@ -1029,13 +1029,12 @@
     }
 
     // ============================================================
-    //  🔥 核心修复：缓存优先 + 净值状态下 rate 正确传递
+    //  核心数据获取
     // ============================================================
     async function fetchFundDataOnly(code) {
         const today = new Date().toISOString().substring(0, 10);
         const d = cache[code] || {};
 
-        // 1️⃣ 检查是否有今日有效缓存 → 直接返回，不请求任何接口
         const cachedNav = parseFloat(d.actualNav);
         if (cachedNav > 0 && d.actualDate === today) {
             return {
@@ -1049,7 +1048,6 @@
             };
         }
 
-        // 2️⃣ 缓存无效 → 去请求东方财富
         const emData = await fetchEastmoneyNav(code);
         if (emData) {
             return {
@@ -1063,7 +1061,6 @@
             };
         }
 
-        // 3️⃣ 东方财富失败 → 天天基金（盘中估值）
         const ttData = await fetchTTFund(code);
         if (ttData) {
             let name = ttData.name || code;
@@ -1079,7 +1076,6 @@
             };
         }
 
-        // 4️⃣ 腾讯证券兜底
         const txData = await fetchTencentNav(code);
         if (txData) {
             const name = getValidName(txData.name, code);
@@ -1098,7 +1094,7 @@
     }
 
     // ============================================================
-    //  更新单只基金（保留旧数据，不覆盖）
+    //  更新单只基金
     // ============================================================
     async function updateFund(code) {
         const old = cache[code] || {};
@@ -1106,7 +1102,6 @@
 
         if (data) {
             const name = getValidName(data.name, code);
-            // 🔥 关键：如果已有今日净值，不覆盖 actualNav/actualRate
             const today = new Date().toISOString().substring(0, 10);
             const hasExisting = old.actualDate === today && parseFloat(old.actualNav) > 0;
 
@@ -1129,7 +1124,7 @@
     }
 
     // ============================================================
-    //  并行更新所有基金
+    //  并行更新
     // ============================================================
     async function silentUpdate() {
         try {
@@ -1211,27 +1206,30 @@
     }
 
     // ============================================================
-    //  显示逻辑（🔥 核心修复：净值状态下 rate 正确传递）
+    //  显示逻辑（🔥 核心修复：强制返回有效 rate）
     // ============================================================
     function getDisplay(code) {
         const d = cache[code] || {};
         const today = new Date().toISOString().slice(0, 10);
 
-        // 优先：已更新的实际净值
+        // 实际净值
         if (d.actualDate === today) {
             const nav = parseFloat(d.actualNav);
             if (!isNaN(nav) && nav > 0) {
-                // 🔥 关键：从 d.actualRate 取值，确保 rate 不为 0
-                const rate = d.actualRate !== undefined ? parseFloat(d.actualRate) : 0;
+                let rate = parseFloat(d.actualRate);
+                if (isNaN(rate) || rate === 0) {
+                    // 🔥 如果 actualRate 无效，尝试从 gszzl 取值（盘中估值可能已有）
+                    rate = parseFloat(d.gszzl) || 0;
+                }
                 return { nav: nav, rate: rate, source: 'actual' };
             }
         }
 
-        // 交易时段使用估值
+        // 交易时段估值
         if (isTradingDay()) {
             const nav2 = parseFloat(d.gsz);
             if (!isNaN(nav2) && nav2 > 0) {
-                return { nav: nav2, rate: d.gszzl !== undefined ? parseFloat(d.gszzl) : 0, source: 'estimate' };
+                return { nav: nav2, rate: parseFloat(d.gszzl) || 0, source: 'estimate' };
             }
         }
 
@@ -1380,6 +1378,9 @@
         setStat('totalReturn', s.totalYield, true);
     }
 
+    // ============================================================
+    //  🔥 渲染基金列表：强制显示，NaN 保护
+    // ============================================================
     function renderFundList() {
         const container = document.getElementById('fundList');
         const codes = Object.keys(holdings);
@@ -1430,11 +1431,18 @@
             const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
             const sign = todayProfit >= 0 ? '+' : '';
 
-            // 🔥 始终显示数值，不再隐藏
-            const profitDisplay = sign + todayProfit.toFixed(2);
-            const returnDisplay = sign + todayProfitRate.toFixed(2) + '%';
-            const pClass = todayProfit > 0 ? 'positive' : todayProfit < 0 ? 'negative' : 'neutral';
-            const rClass = todayProfitRate > 0 ? 'positive' : todayProfitRate < 0 ? 'negative' : 'neutral';
+            // 🔥🔥🔥 强制显示，NaN 保护
+            const profitDisplay = isNaN(todayProfit) ? '0.00' : sign + todayProfit.toFixed(2);
+            const returnDisplay = isNaN(todayProfitRate) ? '0.00%' : sign + todayProfitRate.toFixed(2) + '%';
+
+            // 颜色判断：如果数值为 0 或 NaN，使用 neutral
+            let pClass = 'neutral';
+            if (!isNaN(todayProfit) && todayProfit > 0) pClass = 'positive';
+            else if (!isNaN(todayProfit) && todayProfit < 0) pClass = 'negative';
+
+            let rClass = 'neutral';
+            if (!isNaN(todayProfitRate) && todayProfitRate > 0) rClass = 'positive';
+            else if (!isNaN(todayProfitRate) && todayProfitRate < 0) rClass = 'negative';
 
             html += `
                 <div class="fund-card ${decorClass}" data-code="${code}">
