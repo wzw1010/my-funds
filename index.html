@@ -495,6 +495,7 @@
             border-radius: 0;
             border: none;
             box-shadow: none;
+            position: relative;
         }
 
         .add-modal .add-content h2,
@@ -662,6 +663,42 @@
             transform: scale(0.96);
         }
 
+        /* ============================================================ */
+        /*  🔥 关闭按钮（圆圈 + 叉叉，放在弹窗底部） */
+        /* ============================================================ */
+        .modal-close-btn {
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 18px;
+            z-index: 10;
+        }
+        .modal-close-btn:active {
+            transform: translateX(-50%) scale(0.88);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .modal-close-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: rgba(255, 255, 255, 0.7);
+            stroke-width: 2;
+            fill: none;
+        }
+
         .prompt-modal .prompt-content {
             display: flex;
             flex-direction: column;
@@ -798,6 +835,16 @@
                 font-size: 14px;
                 padding: 12px 14px;
             }
+            .modal-close-btn {
+                width: 40px;
+                height: 40px;
+                bottom: 40px;
+                font-size: 16px;
+            }
+            .modal-close-btn svg {
+                width: 20px;
+                height: 20px;
+            }
         }
     </style>
 </head>
@@ -847,14 +894,11 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
-            <!-- 🔥 饼图图标已优化 -->
+            <!-- 🔥 总收益率图标：用户提供的五边形雷达图 -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
-                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 12 L12 2" />
-                        <path d="M12 12 L18 6" />
-                        <path d="M12 2 A10 10 0 0 1 18 6" />
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 10.5H14M12 8.5V12.5M8.25 5H15.75C16.4404 5 17 5.58763 17 6.3125V19L12 15.5L7 19V6.3125C7 5.58763 7.55964 5 8.25 5Z" />
                     </svg>
                     <span class="stat-label">总收益率</span>
                 </div>
@@ -921,6 +965,13 @@
             <button class="btn-cancel" id="closeModalBtn">取消</button>
             <button class="btn-confirm" id="confirmAddBtn" disabled>确认添加</button>
         </div>
+        <!-- 🔥 关闭按钮 -->
+        <button class="modal-close-btn" id="closeModalBtnCircle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
     </div>
 </div>
 
@@ -937,6 +988,13 @@
             </div>
             <button id="clearCacheBtn"><i class="fas fa-trash-alt"></i> 清除缓存</button>
         </div>
+        <!-- 🔥 关闭按钮 -->
+        <button class="modal-close-btn" id="closeBackupModalBtnCircle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
     </div>
 </div>
 
@@ -1605,6 +1663,9 @@
         const costInput = document.getElementById('fundCostInput');
         const sharesInput = document.getElementById('fundSharesInput');
 
+        // 圆形关闭按钮
+        const closeCircle = document.getElementById('closeModalBtnCircle');
+
         openBtn.addEventListener('click', function() {
             const icon = this.querySelector('.icon-wrap');
             if (icon) {
@@ -1625,9 +1686,11 @@
         });
 
         closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-        // 点击背景遮罩关闭弹窗（可靠方式）
+        closeCircle.addEventListener('click', () => overlay.classList.remove('active'));
+
         overlay.addEventListener('click', function(e) {
-            if (e.target === this) {
+            const content = this.querySelector('.add-content');
+            if (content && !content.contains(e.target)) {
                 this.classList.remove('active');
             }
         });
@@ -1689,6 +1752,7 @@
         const exportBtn = document.getElementById('exportBtn');
         const importInput = document.getElementById('importFileInput');
         const clearCacheBtn = document.getElementById('clearCacheBtn');
+        const closeCircle = document.getElementById('closeBackupModalBtnCircle');
 
         openBtn.addEventListener('click', function() {
             const icon = this.querySelector('.icon-wrap');
@@ -1699,9 +1763,12 @@
             }
             overlay.classList.add('active');
         });
-        // 点击背景遮罩关闭弹窗（可靠方式）
+
+        closeCircle.addEventListener('click', () => overlay.classList.remove('active'));
+
         overlay.addEventListener('click', function(e) {
-            if (e.target === this) {
+            const content = this.querySelector('.backup-content');
+            if (content && !content.contains(e.target)) {
                 this.classList.remove('active');
             }
         });
