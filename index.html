@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>📊 持仓跟踪</title>
+    <title>持仓跟踪</title>
 
     <!-- ===== PWA 配置 ===== -->
     <link rel="manifest" href="manifest.json" />
@@ -49,53 +49,7 @@
             gap: 14px;
         }
 
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .app-header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #0b1a33;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .app-header h1 svg {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-        .header-actions {
-            display: flex;
-            gap: 4px;
-        }
-        .header-actions button {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-full);
-            font-size: 15px;
-            color: #1a4f8b;
-            cursor: pointer;
-            transition: 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
-        }
-        .header-actions button:active {
-            transform: scale(0.88);
-            background: rgba(255, 255, 255, 0.4);
-        }
-        .header-actions button i {
-            font-size: 16px;
-        }
+        /* ===== 顶部导航栏已完全清空 ===== */
 
         .summary-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
@@ -406,91 +360,103 @@
             margin-top: 2px;
         }
 
-        /* ===== 刷新卡片：深蓝渐变 ===== */
-        .refresh-card {
+        /* ============================================================ */
+        /*  🔥 底部功能卡片（三合一） */
+        /* ============================================================ */
+        .bottom-action-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
             border-radius: var(--radius-md);
-            padding: 12px 16px;
+            padding: 6px 4px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
+            align-items: stretch;
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
+            margin-top: 2px;
         }
-        .refresh-card::before {
+
+        .bottom-action-card::before {
             content: '';
             position: absolute;
             top: -50%;
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
             pointer-events: none;
         }
-        .refresh-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-        }
-        .refresh-card:active {
-            transform: scale(0.97);
-            opacity: 0.85;
+
+        .action-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            padding: 8px 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            position: relative;
+            border-radius: var(--radius-md);
+            min-height: 52px;
         }
 
-        .refresh-card .icon-wrap {
-            width: 34px;
-            height: 34px;
+        .action-btn:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 15%;
+            height: 70%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .action-btn:active {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .action-btn .icon-wrap {
+            width: 28px;
+            height: 28px;
             border-radius: var(--radius-full);
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 13px;
             color: #ffffff;
             flex-shrink: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background 0.2s;
+            will-change: transform;
         }
-        .refresh-card .content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            flex: 1;
+
+        @keyframes iconPop {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.3); }
+            60% { transform: scale(0.92); }
+            100% { transform: scale(1); }
         }
-        .refresh-card .content .title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: -0.2px;
+
+        .action-btn .icon-wrap.pop {
+            animation: iconPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .refresh-card .content .sub {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.55);
-            font-weight: 400;
-            margin-top: 0px;
-        }
-        .refresh-card .hint {
-            font-size: 12px;
-            color: #ffffff;
+
+        .action-btn .label {
+            font-size: 10px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .refresh-card .hint i {
-            font-size: 11px;
+            color: rgba(255, 255, 255, 0.75);
+            letter-spacing: 0.2px;
         }
 
         /* ============================================================ */
-        /*  🔥 满屏弹窗：无边框无圆角，铺满屏幕，毛玻璃透出背景 */
+        /*  🔥 满屏弹窗（无边框无圆角，铺满屏幕） */
         /* ============================================================ */
         .modal-overlay {
             display: none;
@@ -535,7 +501,7 @@
         .backup-modal .backup-content h2 {
             font-size: 22px;
             font-weight: 700;
-            color: #ffffff;
+            color: #0b1a33;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -543,80 +509,73 @@
         }
         .add-modal .add-content h2 i,
         .backup-modal .backup-content h2 i {
-            color: rgba(255, 255, 255, 0.8);
+            color: #0b1a33;
         }
 
         .sub-placeholder {
-            height: 16px;
+            height: 24px;
             flex-shrink: 0;
         }
 
-        /* 添加基金弹窗 */
         .add-modal .add-content .input-group {
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-bottom: 20px;
-        }
-        .add-modal .add-content .input-group label {
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.7);
-            text-align: left;
-            margin-bottom: -4px;
+            margin-bottom: 16px;
         }
         .add-modal .add-content .input-group input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-radius: var(--radius-md);
             border: 1px solid rgba(255, 255, 255, 0.2);
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(4px);
-            font-size: 16px;
+            font-size: 15px;
             color: #ffffff;
             outline: none;
             transition: 0.15s;
             -webkit-appearance: none;
         }
         .add-modal .add-content .input-group input::placeholder {
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 400;
+            font-size: 14px;
         }
         .add-modal .add-content .input-group input:focus {
             border-color: rgba(255, 255, 255, 0.5);
             background: rgba(255, 255, 255, 0.2);
         }
+
         .add-modal .add-content .auto-fill-info {
             width: 100%;
             background: rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-md);
-            padding: 10px 14px;
+            padding: 8px 14px;
             font-size: 13px;
             color: rgba(255, 255, 255, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: none;
-            margin-top: -4px;
-            margin-bottom: 4px;
+            margin-top: -6px;
+            margin-bottom: 2px;
             text-align: center;
         }
         .add-modal .add-content .auto-fill-info.show {
             display: block;
         }
 
-        /* 两个弹窗的按钮统一毛玻璃风格 */
-        .add-modal .add-content .modal-actions,
-        .backup-modal .backup-actions {
+        .add-modal .add-content .modal-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
             justify-content: center;
+            margin-top: 12px;
         }
-        .add-modal .add-content .modal-actions button,
-        .backup-modal .backup-actions button {
+        .add-modal .add-content .modal-actions button {
             flex: 1;
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-radius: var(--radius-md);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
@@ -626,8 +585,7 @@
             -webkit-backdrop-filter: blur(4px);
             color: #ffffff;
         }
-        .add-modal .add-content .modal-actions button:active,
-        .backup-modal .backup-actions button:active {
+        .add-modal .add-content .modal-actions button:active {
             background: rgba(255, 255, 255, 0.25);
             transform: scale(0.96);
         }
@@ -641,11 +599,11 @@
             cursor: not-allowed;
         }
 
-        /* 数据管理弹窗：纵向排列 */
         .backup-modal .backup-actions {
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 100%;
         }
         .backup-modal .backup-actions button,
         .backup-modal .backup-actions .file-input-wrap {
@@ -702,19 +660,6 @@
         .backup-modal .backup-actions .file-input-wrap:active {
             background: rgba(255, 255, 255, 0.25);
             transform: scale(0.96);
-        }
-
-        .backup-modal .backup-close {
-            margin-top: 12px;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 14px;
-            cursor: pointer;
-            padding: 8px 16px;
-        }
-        .backup-modal .backup-close:active {
-            color: rgba(255, 255, 255, 0.7);
         }
 
         .prompt-modal .prompt-content {
@@ -840,19 +785,15 @@
             .fund-row-mid { height: 26px; }
             .fund-row-bot { height: 24px; }
 
-            .header-actions button { width: 32px; height: 32px; font-size: 13px; }
-            .header-actions button i { font-size: 14px; }
-            .app-header h1 { font-size: 18px; }
-            .app-header h1 svg { width: 22px; height: 22px; }
-
             .add-modal .add-content,
             .backup-modal .backup-content { padding: 24px 16px; }
-            .add-modal .add-content .input-group input { font-size: 15px; padding: 12px 14px; }
-            .add-modal .add-content .modal-actions button,
-            .backup-modal .backup-actions button {
+            .add-modal .add-content .input-group input { font-size: 14px; padding: 10px 14px; }
+            .add-modal .add-content .input-group input::placeholder { font-size: 13px; }
+            .add-modal .add-content .modal-actions button {
                 font-size: 14px;
-                padding: 12px 14px;
+                padding: 10px 14px;
             }
+            .backup-modal .backup-actions button,
             .backup-modal .backup-actions .file-input-wrap button {
                 font-size: 14px;
                 padding: 12px 14px;
@@ -863,22 +804,7 @@
 <body>
 <div class="app-container" id="app">
 
-    <header class="app-header">
-        <h1>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4.97883 9.68508C2.99294 8.89073 2 8.49355 2 8C2 7.50645 2.99294 7.10927 4.97883 6.31492L7.7873 5.19153C9.77318 4.39718 10.7661 4 12 4C13.2339 4 14.2268 4.39718 16.2127 5.19153L19.0212 6.31492C21.0071 7.10927 22 7.50645 22 8C22 8.49355 21.0071 8.89073 19.0212 9.68508L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L4.97883 9.68508Z" fill="#1C274C"/>
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M2 8C2 8.49355 2.99294 8.89073 4.97883 9.68508L7.7873 10.8085C9.77318 11.6028 10.7661 12 12 12C13.2339 12 14.2268 11.6028 16.2127 10.8085L19.0212 9.68508C21.0071 8.89073 22 8.49355 22 8C22 7.50645 21.0071 7.10927 19.0212 6.31492L16.2127 5.19153C14.2268 4.39718 13.2339 4 12 4C10.7661 4 9.77318 4.39718 7.7873 5.19153L4.97883 6.31492C2.99294 7.10927 2 7.50645 2 8Z" fill="#1C274C"/>
-                <path opacity="0.7" d="M5.76613 10L4.97883 10.3149C2.99294 11.1093 2 11.5065 2 12C2 12.4935 2.99294 12.8907 4.97883 13.6851L7.7873 14.8085C9.77318 15.6028 10.7661 16 12 16C13.2339 16 14.2268 15.6028 16.2127 14.8085L19.0212 13.6851C21.0071 12.8907 22 12.4935 22 12C22 11.5065 21.0071 11.1093 19.0212 10.3149L18.2339 10L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L5.76613 10Z" fill="#1C274C"/>
-                <path opacity="0.4" d="M5.76613 14L4.97883 14.3149C2.99294 15.1093 2 15.5065 2 16C2 16.4935 2.99294 16.8907 4.97883 17.6851L7.7873 18.8085C9.77318 19.6028 10.7661 20 12 20C13.2339 20 14.2268 19.6028 16.2127 18.8085L19.0212 17.6851C21.0071 16.8907 22 16.4935 22 16C22 15.5065 21.0071 15.1093 19.0212 14.3149L18.2339 14L16.2127 14.8085C14.2268 15.6028 13.2339 16 12 16C10.7661 16 9.77318 15.6028 7.7873 14.8085L5.76613 14Z" fill="#1C274C"/>
-            </svg>
-            持仓跟踪
-        </h1>
-        <div class="header-actions">
-            <button id="openAddModalBtn" title="添加基金"><i class="fas fa-plus-circle"></i></button>
-            <button id="openBackupModalBtn" title="数据管理"><i class="fas fa-database"></i></button>
-            <button id="refreshBtn" title="刷新"><i class="fas fa-sync-alt"></i></button>
-        </div>
-    </header>
+    <!-- ===== 顶部导航栏已完全清空 ===== -->
 
     <div class="updating-tip" id="updatingTip">
         <i class="fas fa-spinner fa-spin"></i> 更新中…
@@ -921,13 +847,14 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
+            <!-- 🔥 饼图图标已优化 -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10" />
-                        <path d="M12 2 A10 10 0 0 1 22 12" />
                         <path d="M12 12 L12 2" />
                         <path d="M12 12 L18 6" />
+                        <path d="M12 2 A10 10 0 0 1 18 6" />
                     </svg>
                     <span class="stat-label">总收益率</span>
                 </div>
@@ -940,22 +867,39 @@
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <p>还没有持仓基金</p>
-            <div class="sub">点击右上角 <i class="fas fa-plus-circle"></i> 添加</div>
+            <div class="sub">点击底部「添加持仓」</div>
         </div>
     </div>
 
-    <!-- ===== 刷新卡片 ===== -->
-    <div class="refresh-card" id="refreshCard">
-        <div class="icon-wrap">
-            <i class="fas fa-sync-alt"></i>
+    <!-- ============================================================ -->
+    <!--  🔥 底部功能卡片（三合一） -->
+    <!-- ============================================================ -->
+    <div class="bottom-action-card">
+
+        <!-- 添加持仓 -->
+        <div class="action-btn" id="openAddModalBtn">
+            <div class="icon-wrap">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <span class="label">添加持仓</span>
         </div>
-        <div class="content">
-            <span class="title">刷新数据</span>
-            <span class="sub" id="lastUpdateTime">上次更新：--:--</span>
+
+        <!-- 数据管理 -->
+        <div class="action-btn" id="openBackupModalBtn">
+            <div class="icon-wrap">
+                <i class="fas fa-database"></i>
+            </div>
+            <span class="label">数据管理</span>
         </div>
-        <div class="hint">
-            <i class="fas fa-arrow-right"></i> 刷新
+
+        <!-- 刷新数据 -->
+        <div class="action-btn" id="refreshBtn">
+            <div class="icon-wrap">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <span class="label">刷新数据</span>
         </div>
+
     </div>
 
 </div>
@@ -966,15 +910,12 @@
         <h2><i class="fas fa-coins"></i> 添加基金</h2>
         <div class="sub-placeholder"></div>
         <div class="input-group">
-            <label for="fundCodeInput">基金代码</label>
-            <input type="text" id="fundCodeInput" maxlength="6" inputmode="decimal" placeholder="请输入6位代码" />
+            <input type="text" id="fundCodeInput" maxlength="6" inputmode="decimal" placeholder="基金代码（6位）" />
             <div class="auto-fill-info" id="autoFillInfo">
                 <i class="fas fa-check-circle"></i> <span id="autoFillText">已识别：易方达蓝筹精选</span>
             </div>
-            <label for="fundCostInput">成本价 (¥)</label>
-            <input type="number" id="fundCostInput" step="0.0001" inputmode="decimal" placeholder="例如 1.1000" />
-            <label for="fundSharesInput">持有份额</label>
-            <input type="number" id="fundSharesInput" step="0.01" inputmode="decimal" placeholder="例如 1500.00" />
+            <input type="number" id="fundCostInput" step="0.0001" inputmode="decimal" placeholder="成本价 (¥) 例如 1.1000" />
+            <input type="number" id="fundSharesInput" step="0.01" inputmode="decimal" placeholder="持有份额 例如 1500.00" />
         </div>
         <div class="modal-actions">
             <button class="btn-cancel" id="closeModalBtn">取消</button>
@@ -996,7 +937,6 @@
             </div>
             <button id="clearCacheBtn"><i class="fas fa-trash-alt"></i> 清除缓存</button>
         </div>
-        <button class="backup-close" id="closeBackupModalBtn">关闭</button>
     </div>
 </div>
 
@@ -1256,15 +1196,6 @@
             if (isTradingTime()) { stopAutoRefresh();
                 startAutoRefresh(); }
         });
-        updateLastUpdateTime();
-    }
-
-    // ===== 更新上次刷新时间 =====
-    function updateLastUpdateTime() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('lastUpdateTime').textContent = '上次更新：' + h + ':' + m;
     }
 
     // ===== 盘中自动刷新 =====
@@ -1456,7 +1387,7 @@
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>还没有持仓基金</p>
-                    <div class="sub">点击右上角 <i class="fas fa-plus-circle"></i> 添加</div>
+                    <div class="sub">点击底部「添加持仓」</div>
                 </div>
             `;
             return;
@@ -1545,22 +1476,21 @@
     function renderAll() {
         renderSummary();
         renderFundList();
-        updateLastUpdateTime();
     }
 
     // ===== 刷新状态 =====
     function showUpdating(show) {
         const tip = document.getElementById('updatingTip');
         const btn = document.getElementById('refreshBtn');
-        const icon = btn.querySelector('i');
+        const icon = btn.querySelector('.icon-wrap i');
         if (show) {
             tip.classList.add('show');
             btn.classList.add('refresh-loading');
-            icon.className = 'fas fa-spinner';
+            if (icon) icon.className = 'fas fa-spinner fa-spin';
         } else {
             tip.classList.remove('show');
             btn.classList.remove('refresh-loading');
-            icon.className = 'fas fa-sync-alt';
+            if (icon) icon.className = 'fas fa-sync-alt';
         }
     }
 
@@ -1675,7 +1605,13 @@
         const costInput = document.getElementById('fundCostInput');
         const sharesInput = document.getElementById('fundSharesInput');
 
-        openBtn.addEventListener('click', () => {
+        openBtn.addEventListener('click', function() {
+            const icon = this.querySelector('.icon-wrap');
+            if (icon) {
+                icon.classList.remove('pop');
+                void icon.offsetWidth;
+                icon.classList.add('pop');
+            }
             confirmBtn.dataset.editCode = '';
             confirmBtn.textContent = '确认添加';
             confirmBtn.disabled = true;
@@ -1689,7 +1625,12 @@
         });
 
         closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+        // 点击背景遮罩关闭弹窗（可靠方式）
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
 
         codeInput.addEventListener('input', function() {
             const code = this.value.trim();
@@ -1745,15 +1686,25 @@
     function setupBackup() {
         const overlay = document.getElementById('backupModalOverlay');
         const openBtn = document.getElementById('openBackupModalBtn');
-        const closeBtn = document.getElementById('closeBackupModalBtn');
         const exportBtn = document.getElementById('exportBtn');
         const importInput = document.getElementById('importFileInput');
         const clearCacheBtn = document.getElementById('clearCacheBtn');
 
-        openBtn.addEventListener('click', (e) => { e.stopPropagation();
-            overlay.classList.add('active'); });
-        closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+        openBtn.addEventListener('click', function() {
+            const icon = this.querySelector('.icon-wrap');
+            if (icon) {
+                icon.classList.remove('pop');
+                void icon.offsetWidth;
+                icon.classList.add('pop');
+            }
+            overlay.classList.add('active');
+        });
+        // 点击背景遮罩关闭弹窗（可靠方式）
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
 
         exportBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1810,6 +1761,20 @@
         });
     }
 
+    // ===== 刷新按钮（底部功能卡） =====
+    function setupRefresh() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        refreshBtn.addEventListener('click', function() {
+            const icon = this.querySelector('.icon-wrap');
+            if (icon) {
+                icon.classList.remove('pop');
+                void icon.offsetWidth;
+                icon.classList.add('pop');
+            }
+            refreshWithCache();
+        });
+    }
+
     function registerSW() {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
@@ -1825,14 +1790,7 @@
         loadData();
         setupPrivacyEasterEgg();
 
-        document.getElementById('refreshBtn').addEventListener('click', function() {
-            refreshWithCache();
-        });
-
-        document.getElementById('refreshCard').addEventListener('click', function() {
-            refreshWithCache();
-        });
-
+        setupRefresh();
         renderAll();
 
         if (Object.keys(holdings).length > 0) {
