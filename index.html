@@ -14,13 +14,12 @@
     <meta name="theme-color" content="#f2f5fa" />
 
     <style>
-        /* ===== CSS 变量 ===== */
+        /* ===== CSS 变量（原样保留） ===== */
         :root {
             --radius-md: 20px;
             --radius-full: 50%;
         }
 
-        /* ===== 大卡片外壳 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -30,7 +29,7 @@
         html, body {
             width: 100%;
             min-height: 100vh;
-            background: #f2f5fa;
+            background: #5c2600;
             display: flex;
             justify-content: center;
             padding: 4px;
@@ -48,8 +47,6 @@
             align-self: flex-start;
             gap: 14px;
         }
-
-        /* ===== 顶部导航栏已完全清空 ===== */
 
         .summary-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
@@ -360,9 +357,6 @@
             margin-top: 2px;
         }
 
-        /* ============================================================ */
-        /*  🔥 底部功能卡片（三合一） */
-        /* ============================================================ */
         .bottom-action-card {
             background: linear-gradient(145deg, #0b1a33, #132b4a);
             border-radius: var(--radius-md);
@@ -455,9 +449,6 @@
             letter-spacing: 0.2px;
         }
 
-        /* ============================================================ */
-        /*  🔥 满屏弹窗（无边框无圆角，铺满屏幕） */
-        /* ============================================================ */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -663,9 +654,6 @@
             transform: scale(0.96);
         }
 
-        /* ============================================================ */
-        /*  🔥 关闭按钮（圆圈 + 叉叉，放在弹窗底部） */
-        /* ============================================================ */
         .modal-close-btn {
             position: absolute;
             bottom: 48px;
@@ -851,8 +839,6 @@
 <body>
 <div class="app-container" id="app">
 
-    <!-- ===== 顶部导航栏已完全清空 ===== -->
-
     <div class="updating-tip" id="updatingTip">
         <i class="fas fa-spinner fa-spin"></i> 更新中…
     </div>
@@ -894,7 +880,6 @@
                 <div class="stat-number neutral" id="totalProfit">+0.00</div>
             </div>
 
-            <!-- 🔥 总收益率图标：用户提供的五边形雷达图 -->
             <div class="summary-stat-item">
                 <div class="stat-label-wrap">
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -915,12 +900,7 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!--  🔥 底部功能卡片（三合一） -->
-    <!-- ============================================================ -->
     <div class="bottom-action-card">
-
-        <!-- 添加持仓 -->
         <div class="action-btn" id="openAddModalBtn">
             <div class="icon-wrap">
                 <i class="fas fa-plus-circle"></i>
@@ -928,7 +908,6 @@
             <span class="label">添加持仓</span>
         </div>
 
-        <!-- 数据管理 -->
         <div class="action-btn" id="openBackupModalBtn">
             <div class="icon-wrap">
                 <i class="fas fa-database"></i>
@@ -936,19 +915,17 @@
             <span class="label">数据管理</span>
         </div>
 
-        <!-- 刷新数据 -->
         <div class="action-btn" id="refreshBtn">
             <div class="icon-wrap">
                 <i class="fas fa-sync-alt"></i>
             </div>
             <span class="label">刷新数据</span>
         </div>
-
     </div>
 
 </div>
 
-<!-- ===== 添加基金 模态框（满屏） ===== -->
+<!-- ===== 添加基金 模态框 ===== -->
 <div class="modal-overlay add-modal" id="modalOverlay">
     <div class="add-content">
         <h2><i class="fas fa-coins"></i> 添加基金</h2>
@@ -963,9 +940,8 @@
         </div>
         <div class="modal-actions">
             <button class="btn-cancel" id="closeModalBtn">取消</button>
-            <button class="btn-confirm" id="confirmAddBtn" disabled>确认添加</button>
+            <button class="btn-cancel" id="confirmAddBtn" disabled>确认添加</button>
         </div>
-        <!-- 🔥 关闭按钮 -->
         <button class="modal-close-btn" id="closeModalBtnCircle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -975,7 +951,7 @@
     </div>
 </div>
 
-<!-- ===== 数据管理 模态框（满屏） ===== -->
+<!-- ===== 数据管理 模态框 ===== -->
 <div class="modal-overlay backup-modal" id="backupModalOverlay">
     <div class="backup-content">
         <h2><i class="fas fa-database"></i> 数据管理</h2>
@@ -988,7 +964,6 @@
             </div>
             <button id="clearCacheBtn"><i class="fas fa-trash-alt"></i> 清除缓存</button>
         </div>
-        <!-- 🔥 关闭按钮 -->
         <button class="modal-close-btn" id="closeBackupModalBtnCircle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -1010,30 +985,34 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <script>
-    // ============================================================
-    //  数据源：腾讯证券（净值优先）+ 天天基金（估值兜底）
-    //  净值一旦获取，永久固定，不再覆盖
-    // ============================================================
+    // ================================================================
+    //  Fund Holder · 精简版（速度优化版）
+    //  采用完整版的并发限流、时段分流、快速超时、重试、流式渲染
+    // ================================================================
 
-    const STORAGE_H = 'capsule_holdings';
-    const STORAGE_C = 'capsule_cache';
-    let holdings = {};
-    let cache = {};
-    let isUpdating = false;
-    let privacyMode = false;
+    // ===== 存储键名 =====
+    var STORAGE_H = 'capsule_holdings';
+    var STORAGE_C = 'capsule_cache';
 
+    // ===== 数据 =====
+    var holdings = {};
+    var cache = {};
+    var isUpdating = false;
+    var privacyMode = false;
+
+    // ===== 工具函数 =====
     function loadData() {
         try { holdings = JSON.parse(localStorage.getItem(STORAGE_H)) || {}; } catch (e) { holdings = {}; }
         try { cache = JSON.parse(localStorage.getItem(STORAGE_C)) || {}; } catch (e) { cache = {}; }
     }
-
     function saveAll() {
         localStorage.setItem(STORAGE_H, JSON.stringify(holdings));
         localStorage.setItem(STORAGE_C, JSON.stringify(cache));
     }
     loadData();
 
-    const HOLIDAYS = new Set([
+    // ===== 交易日判断 =====
+    var HOLIDAYS = new Set([
         '2026-01-01', '2026-01-02', '2026-01-03',
         '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19',
         '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23',
@@ -1046,64 +1025,79 @@
     ]);
 
     function isTradingDay() {
-        const d = new Date();
-        const ds = d.toISOString().slice(0, 10);
+        var d = new Date();
+        var ds = d.toISOString().slice(0, 10);
         if (d.getDay() === 0 || d.getDay() === 6) return false;
         return !HOLIDAYS.has(ds);
     }
 
+    function getMinutes() {
+        var now = new Date();
+        return now.getHours() * 60 + now.getMinutes();
+    }
+
+    // 交易时段：9:15 ~ 15:15
     function isTradingTime() {
         if (!isTradingDay()) return false;
-        const m = new Date().getHours() * 60 + new Date().getMinutes();
+        var m = getMinutes();
         return m >= 555 && m < 915;
     }
 
+    // ===== 名称校验 =====
     function isValidName(name) {
-        if (!name) return false;
-        if (typeof name !== 'string') return false;
-        const trimmed = name.trim();
+        if (!name || typeof name !== 'string') return false;
+        var trimmed = name.trim();
         if (trimmed.length < 2) return false;
         if (/^[\d\s]+$/.test(trimmed)) return false;
         if (/^[．·\-_]+$/.test(trimmed)) return false;
         return true;
     }
-
     function getValidName(name, code) {
-        if (isValidName(name)) return name.trim();
-        return code;
+        return isValidName(name) ? name.trim() : code;
     }
 
-    // ===== 天天基金（盘中估值） =====
-    function fetchTTFund(code) {
+    // ================================================================
+    //  1. 天天基金（盘中估值）—— 支持重试
+    // ================================================================
+    function fetchTTFund(code, retries) {
+        if (retries === undefined) retries = 2;
         return new Promise(function(resolve) {
-            const script = document.createElement('script');
-            const timer = setTimeout(function() { cleanup();
-                resolve(null); }, 8000);
-            window.jsonpgz = function(data) {
-                if (data && data.fundcode === code) {
-                    cleanup();
-                    resolve(data);
-                }
-            };
+            var attempt = function(remain) {
+                var script = document.createElement('script');
+                var timer = setTimeout(function() { cleanup();
+                    if (remain > 0) attempt(remain - 1);
+                    else resolve(null); }, 4000);
+                window.jsonpgz = function(data) {
+                    if (data && data.fundcode === code) {
+                        cleanup();
+                        resolve(data);
+                    }
+                };
 
-            function cleanup() {
-                clearTimeout(timer);
-                if (script.parentNode) script.remove();
-            }
-            script.src = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
-            script.onerror = function() { cleanup();
-                resolve(null); };
-            document.head.appendChild(script);
+                function cleanup() {
+                    clearTimeout(timer);
+                    if (script.parentNode) script.remove();
+                    delete window.jsonpgz;
+                }
+                script.src = 'https://fundgz.1234567.com.cn/js/' + code + '.js?rt=' + Date.now();
+                script.onerror = function() { cleanup();
+                    if (remain > 0) attempt(remain - 1);
+                    else resolve(null); };
+                document.head.appendChild(script);
+            };
+            attempt(retries);
         });
     }
 
-    // ===== 腾讯证券（实际净值） =====
+    // ================================================================
+    //  2. 腾讯证券（实际净值）—— 带超时
+    // ================================================================
     function fetchTencentNav(code) {
         return new Promise(function(resolve) {
-            const script = document.createElement('script');
-            const timer = setTimeout(function() { cleanup();
-                resolve(null); }, 10000);
-            const varName = 'v_jj' + code;
+            var script = document.createElement('script');
+            var timer = setTimeout(function() { cleanup();
+                resolve(null); }, 4000);
+            var varName = 'v_jj' + code;
 
             function cleanup() {
                 clearTimeout(timer);
@@ -1113,16 +1107,16 @@
             script.src = 'https://qt.gtimg.cn/q=jj' + code;
             script.onload = function() {
                 cleanup();
-                const raw = window[varName];
+                var raw = window[varName];
                 if (raw && typeof raw === 'string') {
-                    const parts = raw.split('~');
-                    const nav = parseFloat(parts[5]) || 0;
-                    const rate = parseFloat(parts[7]) || 0;
-                    const date = parts[8] || '';
-                    let name = parts[1] || '';
+                    var parts = raw.split('~');
+                    var nav = parseFloat(parts[5]) || 0;
+                    var rate = parseFloat(parts[7]) || 0;
+                    var date = parts[8] || '';
+                    var name = parts[1] || '';
                     if (!isValidName(name)) name = code;
                     if (nav > 0 && date) {
-                        resolve({ nav, rate, date, name });
+                        resolve({ nav: nav, rate: rate, date: date, name: name });
                     } else {
                         resolve(null);
                     }
@@ -1136,27 +1130,62 @@
         });
     }
 
-    // ===== 统一数据获取 =====
+    // ================================================================
+    //  3. 统一数据获取（时段分流）
+    // ================================================================
     async function fetchFundDataOnly(code) {
-        const today = new Date().toISOString().substring(0, 10);
-        const d = cache[code] || {};
+        var today = new Date().toISOString().substring(0, 10);
+        var d = cache[code] || {};
 
-        const cachedNav = parseFloat(d.actualNav);
-        if (cachedNav > 0 && d.actualDate === today) {
+        // 如果已有今天的实际净值，直接返回缓存（避免重复请求）
+        if (d.actualDate === today && parseFloat(d.actualNav) > 0) {
             return {
                 name: getValidName(d.name, code),
-                nav: cachedNav,
-                changePercent: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
+                nav: parseFloat(d.actualNav),
+                changePercent: parseFloat(d.actualRate) || 0,
                 navDate: today,
-                gsz: cachedNav,
-                gszzl: d.actualRate !== undefined ? parseFloat(d.actualRate) : 0,
-                source: d.source || 'cache'
+                gsz: parseFloat(d.gsz) || 0,
+                gszzl: parseFloat(d.gszzl) || 0,
+                source: 'cache'
             };
         }
 
-        const txData = await fetchTencentNav(code);
-        if (txData && txData.nav > 0 && txData.date === today) {
-            const name = getValidName(txData.name, code);
+        var isTrading = isTradingTime();
+
+        // ===== 交易时段：优先天天基金（实时估值） =====
+        if (isTrading) {
+            var ttData = await fetchTTFund(code, 2);
+            if (ttData && ttData.gsz) {
+                var name = getValidName(ttData.name, code);
+                return {
+                    name: name,
+                    gsz: parseFloat(ttData.gsz) || 0,
+                    gszzl: parseFloat(ttData.gszzl) || 0,
+                    nav: parseFloat(ttData.dwjz) || 0,
+                    changePercent: parseFloat(ttData.gszzl) || 0,
+                    navDate: ttData.jzrq || '',
+                    source: 'tt'
+                };
+            }
+            // 估值失败，尝试用缓存中的估值，或返回空
+            if (d.gsz && parseFloat(d.gsz) > 0) {
+                return {
+                    name: getValidName(d.name, code),
+                    gsz: parseFloat(d.gsz) || 0,
+                    gszzl: parseFloat(d.gszzl) || 0,
+                    nav: parseFloat(d.actualNav) || 0,
+                    changePercent: parseFloat(d.gszzl) || 0,
+                    navDate: d.actualDate || '',
+                    source: 'cache_est'
+                };
+            }
+            return null;
+        }
+
+        // ===== 非交易时段（盘后/周末）：腾讯实际净值 =====
+        var txData = await fetchTencentNav(code);
+        if (txData && txData.nav > 0) {
+            var name = getValidName(txData.name, code);
             return {
                 name: name,
                 nav: txData.nav,
@@ -1168,71 +1197,108 @@
             };
         }
 
-        const ttData = await fetchTTFund(code);
-        if (ttData) {
-            let name = ttData.name || code;
-            if (!isValidName(name)) name = code;
+        // 腾讯失败，尝试使用缓存的实际净值（即使日期不是今天）
+        if (d.actualNav && parseFloat(d.actualNav) > 0) {
             return {
-                name: name,
-                gsz: parseFloat(ttData.gsz) || 0,
-                gszzl: parseFloat(ttData.gszzl) || 0,
-                nav: parseFloat(ttData.dwjz) || 0,
-                changePercent: parseFloat(ttData.gszzl) || 0,
-                navDate: ttData.jzrq || '',
-                source: 'tt'
+                name: getValidName(d.name, code),
+                nav: parseFloat(d.actualNav),
+                changePercent: parseFloat(d.actualRate) || 0,
+                navDate: d.actualDate || '',
+                gsz: parseFloat(d.gsz) || 0,
+                gszzl: parseFloat(d.gszzl) || 0,
+                source: 'cached_nav'
+            };
+        }
+
+        // 最后尝试估值缓存
+        if (d.gsz && parseFloat(d.gsz) > 0) {
+            return {
+                name: getValidName(d.name, code),
+                gsz: parseFloat(d.gsz) || 0,
+                gszzl: parseFloat(d.gszzl) || 0,
+                nav: parseFloat(d.actualNav) || 0,
+                changePercent: parseFloat(d.gszzl) || 0,
+                navDate: d.actualDate || '',
+                source: 'cache_est'
             };
         }
 
         return null;
     }
 
-    // ===== 更新单只基金 =====
+    // ================================================================
+    //  4. 更新单只基金（智能合并）
+    // ================================================================
     async function updateFund(code) {
-        const old = cache[code] || {};
-        const data = await fetchFundDataOnly(code);
-
-        if (data) {
-            const name = getValidName(data.name, code);
-            const today = new Date().toISOString().substring(0, 10);
-
-            const hasExistingNav = old.actualDate === today && parseFloat(old.actualNav) > 0;
-            if (hasExistingNav) {
-                cache[code] = {
-                    name: name,
-                    gsz: data.gsz || old.gsz || 0,
-                    gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
-                    actualNav: old.actualNav,
-                    actualRate: old.actualRate,
-                    actualDate: old.actualDate,
-                    source: old.source || 'tencent'
-                };
-            } else {
-                cache[code] = {
-                    name: name,
-                    gsz: data.gsz || 0,
-                    gszzl: data.gszzl !== undefined ? data.gszzl : 0,
-                    actualNav: data.nav ? String(data.nav) : old.actualNav,
-                    actualRate: data.changePercent !== undefined ? data.changePercent : old.actualRate,
-                    actualDate: data.navDate || old.actualDate || '',
-                    source: data.source || old.source || 'tt'
-                };
-            }
-        } else {
+        var old = cache[code] || {};
+        var data = await fetchFundDataOnly(code);
+        if (!data) {
             if (!old.name) {
                 cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '', source: 'none' };
             }
+            saveAll();
+            return cache[code];
         }
+
+        var name = getValidName(data.name, code);
+        // 保留已有的实际净值（如果已有，且新数据不是腾讯实际净值，则不覆盖）
+        var hasExistingNav = old.actualNav && parseFloat(old.actualNav) > 0;
+        var isNewNav = data.source === 'tencent' || data.source === 'cached_nav';
+
+        var newEntry = {
+            name: name,
+            gsz: data.gsz || old.gsz || 0,
+            gszzl: data.gszzl !== undefined ? data.gszzl : old.gszzl || 0,
+            actualNav: old.actualNav,
+            actualRate: old.actualRate,
+            actualDate: old.actualDate,
+            source: old.source || 'tt'
+        };
+
+        if (isNewNav && data.nav > 0) {
+            newEntry.actualNav = String(data.nav);
+            newEntry.actualRate = data.changePercent !== undefined ? data.changePercent : old.actualRate;
+            newEntry.actualDate = data.navDate || old.actualDate || '';
+            newEntry.source = data.source || 'tencent';
+        } else if (!hasExistingNav && data.nav > 0) {
+            // 如果原来没有实际净值，但数据中有（可能是估值中带的净值），也保存
+            newEntry.actualNav = String(data.nav);
+            newEntry.actualRate = data.changePercent !== undefined ? data.changePercent : old.actualRate;
+            newEntry.actualDate = data.navDate || old.actualDate || '';
+            newEntry.source = data.source || 'tt';
+        }
+
+        cache[code] = newEntry;
         saveAll();
         return cache[code];
     }
 
-    // ===== 并行更新 =====
+    // ================================================================
+    //  5. 批量并发更新（每次 3 个，流式渲染）
+    // ================================================================
+    async function batchUpdate(codes) {
+        if (!codes.length) return;
+        // 每次并发 3 个
+        var batchSize = 3;
+        for (var i = 0; i < codes.length; i += batchSize) {
+            var batch = codes.slice(i, i + batchSize);
+            // 使用 allSettled 避免单只失败影响整批
+            await Promise.allSettled(batch.map(function(code) {
+                return updateFund(code);
+            }));
+            // 每批完成后立即渲染（流式）
+            renderAll();
+        }
+    }
+
+    // ================================================================
+    //  6. 更新入口
+    // ================================================================
     async function silentUpdate() {
         try {
-            const codes = Object.keys(holdings);
+            var codes = Object.keys(holdings);
             if (codes.length) {
-                await Promise.all(codes.map(code => updateFund(code)));
-                renderAll();
+                await batchUpdate(codes);
             }
         } catch (e) {
             console.warn('后台更新失败，数据保持不变', e);
@@ -1242,28 +1308,30 @@
     async function refreshWithCache() {
         if (isUpdating) return;
         isUpdating = true;
-
         showUpdating(true);
-        setTimeout(() => {
-            showUpdating(false);
-            isUpdating = false;
-        }, 200);
 
+        // 先立即展示现有数据（如果还没有显示）
         renderAll();
-        silentUpdate().then(() => {
-            if (isTradingTime()) { stopAutoRefresh();
-                startAutoRefresh(); }
-        });
+
+        // 开始更新
+        await silentUpdate();
+
+        showUpdating(false);
+        isUpdating = false;
+        // 更新完成后调度下一次刷新
+        scheduleAutoRefresh();
     }
 
-    // ===== 盘中自动刷新 =====
-    let autoTimer = null;
+    // ================================================================
+    //  7. 自动刷新（仅在交易时段每 60 秒）
+    // ================================================================
+    var autoTimer = null;
 
     function startAutoRefresh() {
         stopAutoRefresh();
         if (!isTradingDay()) return;
         if (isTradingTime()) refreshWithCache();
-        autoTimer = setInterval(() => {
+        autoTimer = setInterval(function() {
             if (isTradingTime()) refreshWithCache();
             else stopAutoRefresh();
         }, 60000);
@@ -1274,78 +1342,88 @@
             autoTimer = null; }
     }
 
-    // ===== 显示逻辑 =====
+    function scheduleAutoRefresh() {
+        // 自动刷新由 startAutoRefresh 管理
+    }
+
+    // ================================================================
+    //  8. 显示逻辑（优先使用实际净值，不限日期）
+    // ================================================================
     function getDisplay(code) {
-        const d = cache[code] || {};
-        const today = new Date().toISOString().slice(0, 10);
+        var d = cache[code] || {};
+        var today = new Date().toISOString().slice(0, 10);
 
-        if (d.actualDate === today) {
-            const nav = parseFloat(d.actualNav);
-            if (!isNaN(nav) && nav > 0) {
-                let rate = parseFloat(d.actualRate);
-                if (isNaN(rate) || rate === 0) {
-                    rate = parseFloat(d.gszzl) || 0;
-                }
-                return { nav: nav, rate: rate, source: 'actual' };
+        // 优先使用实际净值（只要存在且大于0，不限日期）
+        var nav = parseFloat(d.actualNav);
+        if (!isNaN(nav) && nav > 0) {
+            var rate = parseFloat(d.actualRate);
+            if (isNaN(rate) || rate === 0) {
+                rate = parseFloat(d.gszzl) || 0;
             }
+            return { nav: nav, rate: rate, source: 'actual' };
         }
 
-        if (isTradingDay()) {
-            const nav2 = parseFloat(d.gsz);
-            if (!isNaN(nav2) && nav2 > 0) {
-                return { nav: nav2, rate: parseFloat(d.gszzl) || 0, source: 'estimate' };
-            }
+        // 其次使用估值
+        var estNav = parseFloat(d.gsz);
+        if (!isNaN(estNav) && estNav > 0) {
+            return { nav: estNav, rate: parseFloat(d.gszzl) || 0, source: 'estimate' };
         }
 
-        const h = holdings[code] || {};
-        const cost = parseFloat(h.cost) || 0;
+        // 最后回退成本价
+        var h = holdings[code] || {};
+        var cost = parseFloat(h.cost) || 0;
         if (cost > 0) {
             return { nav: cost, rate: 0, source: 'cost' };
         }
-
         return { nav: null, rate: null, source: 'none' };
     }
 
+    // ================================================================
+    //  9. 计算汇总
+    // ================================================================
     function computeSummary() {
-        const codes = Object.keys(holdings);
+        var codes = Object.keys(holdings);
         if (!codes.length) return { totalAsset: 0, todayProfit: 0, totalProfit: 0, totalYield: 0 };
-        let totalCost = 0,
+        var totalCost = 0,
             totalMV = 0,
             todayProfit = 0;
         codes.forEach(function(code) {
-            const h = holdings[code];
-            const cost = parseFloat(h.cost) || 0;
-            const shares = parseFloat(h.shares) || 0;
+            var h = holdings[code];
+            var cost = parseFloat(h.cost) || 0;
+            var shares = parseFloat(h.shares) || 0;
             totalCost += cost * shares;
-            const display = getDisplay(code);
-            const nav = display.nav || cost;
-            const rate = display.rate || 0;
-            const prev = rate !== 0 ? nav / (1 + rate / 100) : nav;
-            const mv = nav * shares;
+            var display = getDisplay(code);
+            var nav = display.nav || cost;
+            var rate = display.rate || 0;
+            // 计算前一日净值（若 rate 不为0）
+            var prev = rate !== 0 ? nav / (1 + rate / 100) : nav;
+            var mv = nav * shares;
             totalMV += mv;
             todayProfit += (nav - prev) * shares;
         });
-        const totalProfit = totalMV - totalCost;
-        const totalYield = totalCost > 0 ? (totalProfit / totalCost * 100) : 0;
-        return { totalAsset: totalMV, todayProfit, totalProfit, totalYield };
+        var totalProfit = totalMV - totalCost;
+        var totalYield = totalCost > 0 ? (totalProfit / totalCost * 100) : 0;
+        return { totalAsset: totalMV, todayProfit: todayProfit, totalProfit: totalProfit, totalYield: totalYield };
     }
 
     function allFundsUpdated() {
-        const codes = Object.keys(holdings);
+        var codes = Object.keys(holdings);
         if (!codes.length) return false;
-        const today = new Date().toISOString().slice(0, 10);
-        return codes.every(code => {
-            const d = cache[code] || {};
+        var today = new Date().toISOString().slice(0, 10);
+        return codes.every(function(code) {
+            var d = cache[code] || {};
             return d.actualDate === today && parseFloat(d.actualNav) > 0;
         });
     }
 
-    // ===== 隐私模式 =====
+    // ================================================================
+    //  10. 隐私模式（三连击切换）
+    // ================================================================
     function applyPrivacyMode() {
-        const todayEl = document.getElementById('todayProfitBig');
-        const totalAssetsEl = document.getElementById('totalAssets');
-        const totalProfitEl = document.getElementById('totalProfit');
-        const totalReturnEl = document.getElementById('totalReturn');
+        var todayEl = document.getElementById('todayProfitBig');
+        var totalAssetsEl = document.getElementById('totalAssets');
+        var totalProfitEl = document.getElementById('totalProfit');
+        var totalReturnEl = document.getElementById('totalReturn');
 
         if (privacyMode) {
             todayEl.classList.add('privacy');
@@ -1365,11 +1443,11 @@
         }
     }
 
-    let clickCount = 0;
-    let clickTimer = null;
+    var clickCount = 0;
+    var clickTimer = null;
 
     function setupPrivacyEasterEgg() {
-        const card = document.getElementById('summaryCard');
+        var card = document.getElementById('summaryCard');
         card.addEventListener('click', function(e) {
             if (e.target.closest('button')) return;
             clearTimeout(clickTimer);
@@ -1384,38 +1462,34 @@
         });
     }
 
-    // ===== 渲染 =====
+    // ================================================================
+    //  11. 渲染函数
+    // ================================================================
     function renderSummary() {
         if (privacyMode) return;
 
-        const s = computeSummary();
-        const codes = Object.keys(holdings);
-        const isAllUpdated = allFundsUpdated();
+        var s = computeSummary();
+        var codes = Object.keys(holdings);
+        var isAllUpdated = allFundsUpdated();
 
-        const todayEl = document.getElementById('todayProfitBig');
+        var todayEl = document.getElementById('todayProfitBig');
         if (codes.length === 0) {
             todayEl.textContent = '+0.00';
             todayEl.className = 'today-value neutral';
-            document.getElementById('todayLabel').innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                今日预估盈亏
-            `;
+            document.getElementById('todayLabel').innerHTML =
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg> 今日预估盈亏';
         } else {
-            const val = s.todayProfit;
+            var val = s.todayProfit;
             todayEl.textContent = (val >= 0 ? '+' : '') + val.toFixed(2);
             todayEl.className = 'today-value ' + (val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral');
 
-            const label = document.getElementById('todayLabel');
-            const icon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>`;
+            var label = document.getElementById('todayLabel');
+            var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>';
             label.innerHTML = icon + (isAllUpdated ? '今日实际盈亏' : '今日预估盈亏');
         }
 
-        const setStat = (id, val, isPct) => {
-            const el = document.getElementById(id);
+        var setStat = function(id, val, isPct) {
+            var el = document.getElementById(id);
             if (codes.length === 0) {
                 el.textContent = isPct ? '0.00%' : '0.00';
                 el.className = 'stat-number neutral';
@@ -1426,9 +1500,9 @@
                 el.className = 'stat-number neutral';
                 return;
             }
-            const prefix = !isPct && val >= 0 ? '+' : '';
+            var prefix = !isPct && val >= 0 ? '+' : '';
             el.textContent = prefix + val.toFixed(2) + (isPct ? '%' : '');
-            const cls = val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral';
+            var cls = val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral';
             el.className = 'stat-number ' + cls;
         };
 
@@ -1438,44 +1512,40 @@
     }
 
     function renderFundList() {
-        const container = document.getElementById('fundList');
-        const codes = Object.keys(holdings);
+        var container = document.getElementById('fundList');
+        var codes = Object.keys(holdings);
         if (codes.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>还没有持仓基金</p>
-                    <div class="sub">点击底部「添加持仓」</div>
-                </div>
-            `;
+            container.innerHTML =
+                '<div class="empty-state"><i class="fas fa-inbox"></i><p>还没有持仓基金</p><div class="sub">点击底部「添加持仓」</div></div>';
             return;
         }
 
-        const sorted = codes.slice().sort((a, b) => {
-            const hA = holdings[a],
+        // 按市值降序排序
+        var sorted = codes.slice().sort(function(a, b) {
+            var hA = holdings[a],
                 hB = holdings[b];
-            const dA = getDisplay(a),
+            var dA = getDisplay(a),
                 dB = getDisplay(b);
-            const mvA = (dA.nav || parseFloat(hA.cost) || 0) * (parseFloat(hA.shares) || 0);
-            const mvB = (dB.nav || parseFloat(hB.cost) || 0) * (parseFloat(hB.shares) || 0);
+            var mvA = (dA.nav || parseFloat(hA.cost) || 0) * (parseFloat(hA.shares) || 0);
+            var mvB = (dB.nav || parseFloat(hB.cost) || 0) * (parseFloat(hB.shares) || 0);
             return mvB - mvA;
         });
 
-        let html = '';
-        sorted.forEach(code => {
-            const h = holdings[code];
-            const d = cache[code] || {};
-            const display = getDisplay(code);
-            const cost = parseFloat(h.cost) || 0;
-            const shares = parseFloat(h.shares) || 0;
-            const currentNav = display.nav || cost;
-            const rate = display.rate || 0;
-            const prevNav = rate !== 0 ? currentNav / (1 + rate / 100) : currentNav;
-            const marketValue = currentNav * shares;
-            const todayProfit = (currentNav - prevNav) * shares;
-            const todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
+        var html = '';
+        sorted.forEach(function(code) {
+            var h = holdings[code];
+            var d = cache[code] || {};
+            var display = getDisplay(code);
+            var cost = parseFloat(h.cost) || 0;
+            var shares = parseFloat(h.shares) || 0;
+            var currentNav = display.nav || cost;
+            var rate = display.rate || 0;
+            var prevNav = rate !== 0 ? currentNav / (1 + rate / 100) : currentNav;
+            var marketValue = currentNav * shares;
+            var todayProfit = (currentNav - prevNav) * shares;
+            var todayProfitRate = prevNav !== 0 ? (todayProfit / (prevNav * shares)) * 100 : 0;
 
-            let name = getValidName(d.name, code);
+            var name = getValidName(d.name, code);
             if (!isValidName(name) && isValidName(h.name)) {
                 name = h.name;
             }
@@ -1483,50 +1553,45 @@
                 name = code;
             }
 
-            const isActual = display.source === 'actual';
-            const decorClass = isActual ? 'decor-actual' : 'decor-estimate';
-            const sign = todayProfit >= 0 ? '+' : '';
+            var isActual = display.source === 'actual';
+            var decorClass = isActual ? 'decor-actual' : 'decor-estimate';
+            var sign = todayProfit >= 0 ? '+' : '';
 
-            const profitDisplay = isNaN(todayProfit) ? '0.00' : sign + todayProfit.toFixed(2);
-            const returnDisplay = isNaN(todayProfitRate) ? '0.00%' : sign + todayProfitRate.toFixed(2) + '%';
+            var profitDisplay = isNaN(todayProfit) ? '0.00' : sign + todayProfit.toFixed(2);
+            var returnDisplay = isNaN(todayProfitRate) ? '0.00%' : sign + todayProfitRate.toFixed(2) + '%';
 
-            let pClass = 'neutral';
+            var pClass = 'neutral';
             if (!isNaN(todayProfit) && todayProfit > 0) pClass = 'positive';
             else if (!isNaN(todayProfit) && todayProfit < 0) pClass = 'negative';
 
-            let rClass = 'neutral';
+            var rClass = 'neutral';
             if (!isNaN(todayProfitRate) && todayProfitRate > 0) rClass = 'positive';
             else if (!isNaN(todayProfitRate) && todayProfitRate < 0) rClass = 'negative';
 
-            html += `
-                <div class="fund-card ${decorClass}" data-code="${code}">
-                    <div class="fund-content">
-                        <div class="fund-row fund-row-top">
-                            <div class="fund-name-wrap">
-                                <span class="fund-name">${name}</span>
-                                <span class="fund-code">${code}</span>
-                            </div>
-                            <div class="fund-actions">
-                                <button class="edit-btn" onclick="editFund('${code}')"><i class="fas fa-pen"></i></button>
-                                <button onclick="deleteFund('${code}')"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>
-                        <div class="fund-row fund-row-mid">
-                            <span class="fund-profit ${pClass}"><span class="label-sm">今日盈亏</span> ${profitDisplay}</span>
-                            <span class="fund-return ${rClass}"><span class="label-sm">收益率</span> ${returnDisplay}</span>
-                        </div>
-                        <div class="fund-row fund-row-bot">
-                            <div class="fund-details-left">
-                                <span class="detail-item"><i class="fas fa-layer-group"></i> 份额：${shares.toFixed(2)}</span>
-                                <span class="detail-item"><i class="fas fa-tag"></i> 成本：${cost.toFixed(4)}</span>
-                            </div>
-                            <div class="fund-details-right">
-                                <i class="fas fa-coins"></i> ¥${marketValue.toFixed(2)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            html +=
+                '<div class="fund-card ' + decorClass + '" data-code="' + code + '">' +
+                '<div class="fund-content">' +
+                '<div class="fund-row fund-row-top">' +
+                '<div class="fund-name-wrap"><span class="fund-name">' + name + '</span><span class="fund-code">' + code +
+                '</span></div>' +
+                '<div class="fund-actions"><button class="edit-btn" onclick="editFund(\'' + code +
+                '\')"><i class="fas fa-pen"></i></button><button onclick="deleteFund(\'' + code +
+                '\')"><i class="fas fa-trash-alt"></i></button></div>' +
+                '</div>' +
+                '<div class="fund-row fund-row-mid">' +
+                '<span class="fund-profit ' + pClass + '"><span class="label-sm">今日盈亏</span> ' + profitDisplay +
+                '</span>' +
+                '<span class="fund-return ' + rClass + '"><span class="label-sm">收益率</span> ' + returnDisplay +
+                '</span>' +
+                '</div>' +
+                '<div class="fund-row fund-row-bot">' +
+                '<div class="fund-details-left"><span class="detail-item"><i class="fas fa-layer-group"></i> 份额：' +
+                shares.toFixed(2) +
+                '</span><span class="detail-item"><i class="fas fa-tag"></i> 成本：' + cost.toFixed(4) + '</span></div>' +
+                '<div class="fund-details-right"><i class="fas fa-coins"></i> ¥' + marketValue.toFixed(2) + '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
         });
         container.innerHTML = html;
     }
@@ -1536,11 +1601,13 @@
         renderFundList();
     }
 
-    // ===== 刷新状态 =====
+    // ================================================================
+    //  12. 刷新状态 UI
+    // ================================================================
     function showUpdating(show) {
-        const tip = document.getElementById('updatingTip');
-        const btn = document.getElementById('refreshBtn');
-        const icon = btn.querySelector('.icon-wrap i');
+        var tip = document.getElementById('updatingTip');
+        var btn = document.getElementById('refreshBtn');
+        var icon = btn ? btn.querySelector('.icon-wrap i') : null;
         if (show) {
             tip.classList.add('show');
             btn.classList.add('refresh-loading');
@@ -1552,9 +1619,11 @@
         }
     }
 
-    // ===== CRUD =====
+    // ================================================================
+    //  13. CRUD 操作
+    // ================================================================
     async function deleteFund(code) {
-        const confirmed = await showConfirm('确定要删除这只基金吗？');
+        var confirmed = await showConfirm('确定要删除这只基金吗？');
         if (!confirmed) return;
         delete holdings[code];
         delete cache[code];
@@ -1563,12 +1632,12 @@
     }
 
     function editFund(code) {
-        const fund = holdings[code];
+        var fund = holdings[code];
         if (!fund) return;
         document.getElementById('fundCodeInput').value = code;
         document.getElementById('fundCostInput').value = fund.cost;
         document.getElementById('fundSharesInput').value = fund.shares;
-        const confirmBtn = document.getElementById('confirmAddBtn');
+        var confirmBtn = document.getElementById('confirmAddBtn');
         confirmBtn.dataset.editCode = code;
         confirmBtn.textContent = '更新基金';
         confirmBtn.disabled = true;
@@ -1576,22 +1645,24 @@
         autoFillFromCode(code);
     }
 
-    // ===== 模态框工具 =====
-    const promptOverlay = document.getElementById('promptModalOverlay');
-    const promptTitle = document.getElementById('promptTitle');
-    const promptMessage = document.getElementById('promptMessage');
-    const promptActions = document.getElementById('promptActions');
+    // ================================================================
+    //  14. 模态框工具
+    // ================================================================
+    var promptOverlay = document.getElementById('promptModalOverlay');
+    var promptTitle = document.getElementById('promptTitle');
+    var promptMessage = document.getElementById('promptMessage');
+    var promptActions = document.getElementById('promptActions');
 
     function showPrompt(title, message, buttons) {
-        return new Promise((resolve) => {
+        return new Promise(function(resolve) {
             promptTitle.textContent = title || '提示';
             promptMessage.textContent = message || '';
             promptActions.innerHTML = '';
-            buttons.forEach((btn) => {
-                const el = document.createElement('button');
+            buttons.forEach(function(btn) {
+                var el = document.createElement('button');
                 el.textContent = btn.text;
                 el.className = btn.className || 'btn-confirm';
-                el.addEventListener('click', () => {
+                el.addEventListener('click', function() {
                     closePrompt();
                     resolve(btn.value);
                 });
@@ -1603,31 +1674,35 @@
 
     function closePrompt() { promptOverlay.classList.remove('active'); }
 
-    function showAlert(message, title = '提示') {
+    function showAlert(message, title) {
+        if (title === undefined) title = '提示';
         return showPrompt(title, message, [{ text: '确定', className: 'btn-confirm', value: true }]);
     }
 
-    function showConfirm(message, title = '确认操作') {
+    function showConfirm(message, title) {
+        if (title === undefined) title = '确认操作';
         return showPrompt(title, message, [
             { text: '取消', className: 'btn-cancel', value: false },
             { text: '确定', className: 'btn-danger', value: true }
         ]);
     }
 
-    promptOverlay.addEventListener('click', (e) => {
+    promptOverlay.addEventListener('click', function(e) {
         if (e.target === promptOverlay && promptActions.children.length === 1) {
-            const btn = promptActions.querySelector('.btn-confirm');
+            var btn = promptActions.querySelector('.btn-confirm');
             if (btn) btn.click();
         }
     });
 
-    let currentFetchName = '';
+    // ================================================================
+    //  15. 添加基金：自动识别名称
+    // ================================================================
+    var currentFetchName = '';
 
-    // ===== 添加基金：只获取名称 =====
     async function autoFillFromCode(code) {
-        const infoBox = document.getElementById('autoFillInfo');
-        const infoText = document.getElementById('autoFillText');
-        const confirmBtn = document.getElementById('confirmAddBtn');
+        var infoBox = document.getElementById('autoFillInfo');
+        var infoText = document.getElementById('autoFillText');
+        var confirmBtn = document.getElementById('confirmAddBtn');
         if (code.length !== 6 || isNaN(code)) {
             infoBox.classList.remove('show');
             confirmBtn.disabled = true;
@@ -1635,10 +1710,10 @@
             return;
         }
         try {
-            const data = await fetchTTFund(code);
+            var data = await fetchTTFund(code, 2);
             if (data && data.name) {
                 currentFetchName = data.name;
-                infoText.textContent = `已识别：${data.name}`;
+                infoText.textContent = '已识别：' + data.name;
                 infoBox.style.borderColor = 'rgba(255,255,255,0.2)';
                 infoBox.classList.add('show');
                 confirmBtn.disabled = false;
@@ -1654,20 +1729,21 @@
         }
     }
 
+    // ================================================================
+    //  16. 模态框绑定
+    // ================================================================
     function setupModal() {
-        const overlay = document.getElementById('modalOverlay');
-        const closeBtn = document.getElementById('closeModalBtn');
-        const confirmBtn = document.getElementById('confirmAddBtn');
-        const openBtn = document.getElementById('openAddModalBtn');
-        const codeInput = document.getElementById('fundCodeInput');
-        const costInput = document.getElementById('fundCostInput');
-        const sharesInput = document.getElementById('fundSharesInput');
-
-        // 圆形关闭按钮
-        const closeCircle = document.getElementById('closeModalBtnCircle');
+        var overlay = document.getElementById('modalOverlay');
+        var closeBtn = document.getElementById('closeModalBtn');
+        var confirmBtn = document.getElementById('confirmAddBtn');
+        var openBtn = document.getElementById('openAddModalBtn');
+        var codeInput = document.getElementById('fundCodeInput');
+        var costInput = document.getElementById('fundCostInput');
+        var sharesInput = document.getElementById('fundSharesInput');
+        var closeCircle = document.getElementById('closeModalBtnCircle');
 
         openBtn.addEventListener('click', function() {
-            const icon = this.querySelector('.icon-wrap');
+            var icon = this.querySelector('.icon-wrap');
             if (icon) {
                 icon.classList.remove('pop');
                 void icon.offsetWidth;
@@ -1682,21 +1758,21 @@
             document.getElementById('autoFillInfo').classList.remove('show');
             currentFetchName = '';
             overlay.classList.add('active');
-            setTimeout(() => codeInput.focus(), 300);
+            setTimeout(function() { codeInput.focus(); }, 300);
         });
 
-        closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-        closeCircle.addEventListener('click', () => overlay.classList.remove('active'));
+        closeBtn.addEventListener('click', function() { overlay.classList.remove('active'); });
+        closeCircle.addEventListener('click', function() { overlay.classList.remove('active'); });
 
         overlay.addEventListener('click', function(e) {
-            const content = this.querySelector('.add-content');
+            var content = this.querySelector('.add-content');
             if (content && !content.contains(e.target)) {
                 this.classList.remove('active');
             }
         });
 
         codeInput.addEventListener('input', function() {
-            const code = this.value.trim();
+            var code = this.value.trim();
             if (code.length === 6 && !isNaN(code)) {
                 autoFillFromCode(code);
             } else {
@@ -1706,17 +1782,17 @@
             }
         });
 
-        confirmBtn.addEventListener('click', async () => {
-            const code = codeInput.value.trim();
-            const cost = parseFloat(costInput.value);
-            const shares = parseFloat(sharesInput.value);
+        confirmBtn.addEventListener('click', async function() {
+            var code = codeInput.value.trim();
+            var cost = parseFloat(costInput.value);
+            var shares = parseFloat(sharesInput.value);
             if (code.length !== 6) { await showAlert('请输入6位基金代码'); return; }
             if (isNaN(cost) || cost <= 0) { await showAlert('请输入有效的成本价'); return; }
             if (isNaN(shares) || shares <= 0) { await showAlert('请输入有效的持有份额'); return; }
-            let name = currentFetchName;
+            var name = currentFetchName;
             if (!name) {
                 try {
-                    const data = await fetchTTFund(code);
+                    var data = await fetchTTFund(code, 2);
                     if (data && data.name) name = data.name;
                 } catch (_) {}
             }
@@ -1724,19 +1800,19 @@
                 await showAlert('未能识别基金代码，请确认正确后重试');
                 return;
             }
-            const editCode = confirmBtn.dataset.editCode;
+            var editCode = confirmBtn.dataset.editCode;
             if (editCode) {
                 if (editCode !== code) {
                     delete holdings[editCode];
                     delete cache[editCode];
                 }
-                holdings[code] = { cost, shares, name };
+                holdings[code] = { cost: cost, shares: shares, name: name };
             } else {
                 if (holdings[code]) {
-                    const overwrite = await showConfirm(`已存在 ${name}(${code})，是否覆盖？`);
+                    var overwrite = await showConfirm('已存在 ' + name + '(' + code + ')，是否覆盖？');
                     if (!overwrite) return;
                 }
-                holdings[code] = { cost, shares, name };
+                holdings[code] = { cost: cost, shares: shares, name: name };
             }
             saveAll();
             overlay.classList.remove('active');
@@ -1745,17 +1821,19 @@
         });
     }
 
-    // ===== 数据管理 =====
+    // ================================================================
+    //  17. 数据管理
+    // ================================================================
     function setupBackup() {
-        const overlay = document.getElementById('backupModalOverlay');
-        const openBtn = document.getElementById('openBackupModalBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const importInput = document.getElementById('importFileInput');
-        const clearCacheBtn = document.getElementById('clearCacheBtn');
-        const closeCircle = document.getElementById('closeBackupModalBtnCircle');
+        var overlay = document.getElementById('backupModalOverlay');
+        var openBtn = document.getElementById('openBackupModalBtn');
+        var exportBtn = document.getElementById('exportBtn');
+        var importInput = document.getElementById('importFileInput');
+        var clearCacheBtn = document.getElementById('clearCacheBtn');
+        var closeCircle = document.getElementById('closeBackupModalBtnCircle');
 
         openBtn.addEventListener('click', function() {
-            const icon = this.querySelector('.icon-wrap');
+            var icon = this.querySelector('.icon-wrap');
             if (icon) {
                 icon.classList.remove('pop');
                 void icon.offsetWidth;
@@ -1764,10 +1842,10 @@
             overlay.classList.add('active');
         });
 
-        closeCircle.addEventListener('click', () => overlay.classList.remove('active'));
+        closeCircle.addEventListener('click', function() { overlay.classList.remove('active'); });
 
         overlay.addEventListener('click', function(e) {
-            const content = this.querySelector('.backup-content');
+            var content = this.querySelector('.backup-content');
             if (content && !content.contains(e.target)) {
                 this.classList.remove('active');
             }
@@ -1775,12 +1853,12 @@
 
         exportBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const data = JSON.stringify({ holdings, cache }, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            var data = JSON.stringify({ holdings: holdings, cache: cache }, null, 2);
+            var blob = new Blob([data], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
             a.href = url;
-            a.download = `持仓配置_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = '持仓配置_' + new Date().toISOString().slice(0, 10) + '.json';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1789,14 +1867,15 @@
 
         importInput.addEventListener('change', async function(e) {
             e.stopPropagation();
-            const file = this.files[0];
+            var file = this.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
+            var reader = new FileReader();
+            reader.onload = async function(ev) {
                 try {
-                    const data = JSON.parse(ev.target.result);
+                    var data = JSON.parse(ev.target.result);
                     if (data.holdings && typeof data.holdings === 'object') {
-                        const confirmed = await showConfirm(`将导入 ${Object.keys(data.holdings).length} 只基金配置，覆盖当前所有数据，确定吗？`);
+                        var confirmed = await showConfirm('将导入 ' + Object.keys(data.holdings).length +
+                            ' 只基金配置，覆盖当前所有数据，确定吗？');
                         if (confirmed) {
                             holdings = data.holdings || {};
                             cache = data.cache || {};
@@ -1817,22 +1896,24 @@
 
         clearCacheBtn.addEventListener('click', async function(e) {
             e.stopPropagation();
-            const confirmed = await showConfirm('确定要清除所有缓存数据吗？\n（持仓配置不会被删除）', '清除缓存');
+            var confirmed = await showConfirm('确定要清除所有缓存数据吗？\n（持仓配置不会被删除）', '清除缓存');
             if (confirmed) {
                 cache = {};
                 localStorage.setItem(STORAGE_C, JSON.stringify(cache));
                 overlay.classList.remove('active');
                 renderAll();
-                await showAlert('✅ 缓存已清除');
+                await showAlert('缓存已清除');
             }
         });
     }
 
-    // ===== 刷新按钮（底部功能卡） =====
+    // ================================================================
+    //  18. 刷新按钮
+    // ================================================================
     function setupRefresh() {
-        const refreshBtn = document.getElementById('refreshBtn');
+        var refreshBtn = document.getElementById('refreshBtn');
         refreshBtn.addEventListener('click', function() {
-            const icon = this.querySelector('.icon-wrap');
+            var icon = this.querySelector('.icon-wrap');
             if (icon) {
                 icon.classList.remove('pop');
                 void icon.offsetWidth;
@@ -1842,32 +1923,34 @@
         });
     }
 
+    // ================================================================
+    //  19. PWA Service Worker 注册（可选）
+    // ================================================================
     function registerSW() {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('✅ Service Worker 注册成功'))
-                .catch((err) => console.log('❌ Service Worker 注册失败', err));
+                .then(function() { console.log('Service Worker 注册成功'); })
+                .catch(function() { console.log('Service Worker 注册失败'); });
         }
     }
 
-    // ============================================================
-    //  🚀 启动
-    // ============================================================
+    // ================================================================
+    //  20. 启动
+    // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
         loadData();
         setupPrivacyEasterEgg();
-
         setupRefresh();
         renderAll();
 
         if (Object.keys(holdings).length > 0) {
-            const hasCache = Object.keys(cache).length > 0;
+            var hasCache = Object.keys(cache).length > 0;
             if (!hasCache) {
-                refreshWithCache().then(() => {
+                refreshWithCache().then(function() {
                     if (isTradingTime()) startAutoRefresh();
                 });
             } else {
-                silentUpdate().then(() => {
+                silentUpdate().then(function() {
                     if (isTradingTime()) startAutoRefresh();
                 });
             }
@@ -1876,10 +1959,12 @@
         setupModal();
         setupBackup();
 
-        setInterval(() => {
+        // 每30秒检查是否进入/离开交易时段，自动管理定时器
+        setInterval(function() {
             if (isTradingTime() && !autoTimer) startAutoRefresh();
             if (!isTradingTime() && autoTimer) stopAutoRefresh();
         }, 30000);
+
         registerSW();
     });
 </script>
