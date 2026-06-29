@@ -277,7 +277,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 210px;
+            max-width: 200px;
         }
 
         .fund-code-standalone {
@@ -938,9 +938,20 @@
             }
         }
 
-        /* 移除顶部更新提示，不再使用 */
         .updating-tip {
-            display: none !important;
+            text-align: center;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            padding: 4px 0 8px 0;
+            display: none;
+        }
+
+        .updating-tip.show {
+            display: block;
+        }
+
+        .updating-tip i {
+            margin-right: 4px;
         }
 
         /* ===== 响应式 ===== */
@@ -974,7 +985,7 @@
             }
             .fund-name {
                 font-size: 13px;
-                max-width: 170px;
+                max-width: 160px;
             }
             .fund-code-standalone {
                 font-size: 9px;
@@ -1080,7 +1091,7 @@
             }
             .fund-name {
                 font-size: 12px;
-                max-width: 140px;
+                max-width: 130px;
             }
             .fund-code-standalone {
                 font-size: 8px;
@@ -1120,7 +1131,9 @@
 <body>
     <div class="app-container" id="app">
 
-        <!-- 顶部更新提示已移除，不再显示 -->
+        <div class="updating-tip" id="updatingTip">
+            <i class="fas fa-spinner fa-spin"></i> 更新中…
+        </div>
 
         <section class="summary-card" id="summaryCard">
             <div class="summary-today">
@@ -1261,7 +1274,8 @@
 
     <script>
         // ================================================================
-        //  Fund Holder · 最终精简版（刷新图标只转圈，无弹出提示）
+        //  Fund Holder · 精简版（刷新优化版）
+        //  超时6秒，重试3次，全部并发
         // ================================================================
 
         var STORAGE_H = 'capsule_holdings';
@@ -1330,19 +1344,19 @@
         function truncateName(name) {
             if (!name) return '';
             var trimmed = name.trim();
-            if (trimmed.length <= 12) return trimmed;
-            return trimmed.slice(0, 12) + '…';
+            if (trimmed.length <= 11) return trimmed;
+            return trimmed.slice(0, 11) + '…';
         }
 
-        // ===== 超时 2500ms，重试 1 次 =====
+        // ===== 天天基金：超时6秒，重试3次 =====
         function fetchTTFund(code, retries) {
-            if (retries === undefined) retries = 1;
+            if (retries === undefined) retries = 3;
             return new Promise(function(resolve) {
                 var attempt = function(remain) {
                     var script = document.createElement('script');
                     var timer = setTimeout(function() { cleanup();
                         if (remain > 0) attempt(remain - 1);
-                        else resolve(null); }, 2500);
+                        else resolve(null); }, 6000);
                     window.jsonpgz = function(data) {
                         if (data && data.fundcode === code) {
                             cleanup();
@@ -1365,11 +1379,12 @@
             });
         }
 
+        // ===== 腾讯证券：超时6秒 =====
         function fetchTencentNav(code) {
             return new Promise(function(resolve) {
                 var script = document.createElement('script');
                 var timer = setTimeout(function() { cleanup();
-                    resolve(null); }, 2500);
+                    resolve(null); }, 6000);
                 var varName = 'v_jj' + code;
 
                 function cleanup() {
@@ -1403,6 +1418,7 @@
             });
         }
 
+        // ===== 核心：获取数据（skipCache 控制是否跳过缓存） =====
         async function fetchFundDataOnly(code, skipCache) {
             var today = new Date().toISOString().substring(0, 10);
             var d = cache[code] || {};
@@ -1422,7 +1438,7 @@
             var isTrading = isTradingTime();
 
             if (isTrading) {
-                var ttData = await fetchTTFund(code, 1);
+                var ttData = await fetchTTFund(code, 3);
                 if (ttData && ttData.gsz) {
                     var name = getValidName(ttData.name, code);
                     return {
@@ -1435,11 +1451,22 @@
                         source: 'tt'
                     };
                 }
+                if (!skipCache && d.gsz && parseFloat(d.gsz) > 0) {
+                    return {
+                        name: getValidName(d.name, code),
+                        gsz: parseFloat(d.gsz) || 0,
+                        gszzl: parseFloat(d.gszzl) || 0,
+                        nav: parseFloat(d.actualNav) || 0,
+                        changePercent: parseFloat(d.gszzl) || 0,
+                        navDate: d.actualDate || '',
+                        source: 'cache_est'
+                    };
+                }
                 return null;
             }
 
             var txData = await fetchTencentNav(code);
-            if (txData && txData.nav > 0 && txData.date === today) {
+            if (txData && txData.nav > 0) {
                 var name = getValidName(txData.name, code);
                 return {
                     name: name,
@@ -1452,13 +1479,37 @@
                 };
             }
 
+            if (!skipCache && d.actualNav && parseFloat(d.actualNav) > 0) {
+                return {
+                    name: getValidName(d.name, code),
+                    nav: parseFloat(d.actualNav),
+                    changePercent: parseFloat(d.actualRate) || 0,
+                    navDate: d.actualDate || '',
+                    gsz: parseFloat(d.gsz) || 0,
+                    gszzl: parseFloat(d.gszzl) || 0,
+                    source: 'cached_nav'
+                };
+            }
+
+            if (!skipCache && d.gsz && parseFloat(d.gsz) > 0) {
+                return {
+                    name: getValidName(d.name, code),
+                    gsz: parseFloat(d.gsz) || 0,
+                    gszzl: parseFloat(d.gszzl) || 0,
+                    nav: parseFloat(d.actualNav) || 0,
+                    changePercent: parseFloat(d.gszzl) || 0,
+                    navDate: d.actualDate || '',
+                    source: 'cache_est'
+                };
+            }
+
             return null;
         }
 
+        // ===== 更新单只基金（only tencent/cached_nav 写入 actualNav） =====
         async function updateFund(code, skipCache) {
             var old = cache[code] || {};
             var data = await fetchFundDataOnly(code, skipCache);
-
             if (!data) {
                 if (!old.name) {
                     cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '',
@@ -1494,9 +1545,10 @@
             return cache[code];
         }
 
-        // ===== 全部并发 =====
+        // ===== 批量更新：全部并发 =====
         async function batchUpdate(codes, skipCache) {
             if (!codes.length) return;
+            // 全部同时请求
             await Promise.allSettled(codes.map(function(code) {
                 return updateFund(code, skipCache);
             }));
@@ -1525,14 +1577,31 @@
             }
         }
 
+        async function refreshWithCache(force) {
+            if (isUpdating) return;
+            isUpdating = true;
+            showUpdating(true);
+
+            if (force) {
+                await forceUpdate();
+            } else {
+                renderAll();
+                await silentUpdate();
+            }
+
+            showUpdating(false);
+            isUpdating = false;
+            scheduleAutoRefresh();
+        }
+
         var autoTimer = null;
 
         function startAutoRefresh() {
             stopAutoRefresh();
             if (!isTradingDay()) return;
-            if (isTradingTime()) silentUpdate();
+            if (isTradingTime()) refreshWithCache(false);
             autoTimer = setInterval(function() {
-                if (isTradingTime()) silentUpdate();
+                if (isTradingTime()) refreshWithCache(false);
                 else stopAutoRefresh();
             }, 60000);
         }
@@ -1541,6 +1610,8 @@
             if (autoTimer) { clearInterval(autoTimer);
                 autoTimer = null; }
         }
+
+        function scheduleAutoRefresh() {}
 
         function getDisplay(code) {
             var d = cache[code] || {};
@@ -1591,10 +1662,9 @@
         function allFundsUpdated() {
             var codes = Object.keys(holdings);
             if (!codes.length) return false;
-            var today = new Date().toISOString().slice(0, 10);
             return codes.every(function(code) {
                 var d = cache[code] || {};
-                return d.actualDate === today && parseFloat(d.actualNav) > 0;
+                return parseFloat(d.actualNav) > 0;
             });
         }
 
@@ -1818,31 +1888,14 @@
                     '<div class="icon-wrap"><i class="fas fa-database"></i></div><span class="label">数据管理</span>';
                 dataBtn.className = 'action-btn';
                 dataBtn.onclick = function() { document.getElementById('openBackupModalBtn').click(); };
-
-                // ===== 刷新逻辑：图标转圈，无文字提示 =====
                 refreshBtn.onclick = function() {
-                    var icon = this.querySelector('.icon-wrap i');
-                    if (!icon) return;
-                    // 如果已经在更新，忽略本次点击
-                    if (isUpdating) return;
-
-                    // 切换到转圈图标
-                    icon.className = 'fas fa-spinner fa-spin';
-                    // 禁用按钮视觉反馈（可选）
-                    this.style.pointerEvents = 'none';
-
-                    isUpdating = true;
-                    forceUpdate()
-                        .catch(function(e) {
-                            console.warn('后台更新失败', e);
-                        })
-                        .finally(function() {
-                            isUpdating = false;
-                            // 恢复图标
-                            icon.className = 'fas fa-sync-alt';
-                            // 恢复点击
-                            refreshBtn.style.pointerEvents = '';
-                        });
+                    var icon = this.querySelector('.icon-wrap');
+                    if (icon) {
+                        icon.classList.remove('pop');
+                        void icon.offsetWidth;
+                        icon.classList.add('pop');
+                    }
+                    refreshWithCache(true);
                 };
             }
         }
@@ -1941,6 +1994,7 @@
             }
         });
 
+        // ===== 添加基金自动识别 =====
         var currentFetchName = '';
 
         async function autoFillFromCode(code) {
@@ -1954,7 +2008,7 @@
                 return;
             }
             try {
-                var data = await fetchTTFund(code, 1);
+                var data = await fetchTTFund(code, 2);
                 if (data && data.name) {
                     currentFetchName = data.name;
                     infoText.textContent = '已识别：' + data.name;
@@ -2034,7 +2088,7 @@
                 var name = currentFetchName;
                 if (!name) {
                     try {
-                        var data = await fetchTTFund(code, 1);
+                        var data = await fetchTTFund(code, 2);
                         if (data && data.name) name = data.name;
                     } catch (_) {}
                 }
@@ -2124,7 +2178,7 @@
                                 cache = data.cache || {};
                                 saveAll();
                                 overlay.classList.remove('active');
-                                silentUpdate().then(function() { renderAll(); });
+                                await refreshWithCache(false);
                             }
                         } else {
                             await showAlert('配置格式无效，请检查文件');
@@ -2145,10 +2199,24 @@
                     localStorage.setItem(STORAGE_C, JSON.stringify(cache));
                     overlay.classList.remove('active');
                     renderAll();
-                    silentUpdate().then(function() { renderAll(); });
                     await showAlert('缓存已清除');
                 }
             });
+        }
+
+        function showUpdating(show) {
+            var tip = document.getElementById('updatingTip');
+            var btn = document.getElementById('refreshBtn');
+            var icon = btn ? btn.querySelector('.icon-wrap i') : null;
+            if (show) {
+                tip.classList.add('show');
+                btn.classList.add('refresh-loading');
+                if (icon) icon.className = 'fas fa-spinner fa-spin';
+            } else {
+                tip.classList.remove('show');
+                btn.classList.remove('refresh-loading');
+                if (icon) icon.className = 'fas fa-sync-alt';
+            }
         }
 
         function registerSW() {
@@ -2165,11 +2233,16 @@
             renderAll();
 
             if (Object.keys(holdings).length > 0) {
-                silentUpdate().then(function() {
-                    if (isTradingTime()) startAutoRefresh();
-                });
-            } else {
-                if (isTradingTime()) startAutoRefresh();
+                var hasCache = Object.keys(cache).length > 0;
+                if (!hasCache) {
+                    refreshWithCache(false).then(function() {
+                        if (isTradingTime()) startAutoRefresh();
+                    });
+                } else {
+                    silentUpdate().then(function() {
+                        if (isTradingTime()) startAutoRefresh();
+                    });
+                }
             }
 
             setupModal();
@@ -2189,7 +2262,7 @@
 
             registerSW();
 
-            console.log('✅ 刷新图标简洁版：点击刷新仅转圈，无额外提示');
+            console.log('✅ 刷新优化版：超时6s，重试3次，全部并发');
         });
     </script>
 </body>
