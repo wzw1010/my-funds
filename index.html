@@ -277,7 +277,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 200px;
+            max-width: 210px;
         }
 
         .fund-code-standalone {
@@ -938,20 +938,9 @@
             }
         }
 
+        /* 移除顶部更新提示，不再使用 */
         .updating-tip {
-            text-align: center;
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            padding: 4px 0 8px 0;
-            display: none;
-        }
-
-        .updating-tip.show {
-            display: block;
-        }
-
-        .updating-tip i {
-            margin-right: 4px;
+            display: none !important;
         }
 
         /* ===== 响应式 ===== */
@@ -985,7 +974,7 @@
             }
             .fund-name {
                 font-size: 13px;
-                max-width: 160px;
+                max-width: 170px;
             }
             .fund-code-standalone {
                 font-size: 9px;
@@ -1091,7 +1080,7 @@
             }
             .fund-name {
                 font-size: 12px;
-                max-width: 130px;
+                max-width: 140px;
             }
             .fund-code-standalone {
                 font-size: 8px;
@@ -1131,9 +1120,7 @@
 <body>
     <div class="app-container" id="app">
 
-        <div class="updating-tip" id="updatingTip">
-            <i class="fas fa-spinner fa-spin"></i> 更新中…
-        </div>
+        <!-- 顶部更新提示已移除，不再显示 -->
 
         <section class="summary-card" id="summaryCard">
             <div class="summary-today">
@@ -1274,8 +1261,7 @@
 
     <script>
         // ================================================================
-        //  Fund Holder · 修复版
-        //  修复：估值数据不再错误标记为"实际净值"，避免刷新锁死
+        //  Fund Holder · 最终精简版（刷新图标只转圈，无弹出提示）
         // ================================================================
 
         var STORAGE_H = 'capsule_holdings';
@@ -1344,18 +1330,19 @@
         function truncateName(name) {
             if (!name) return '';
             var trimmed = name.trim();
-            if (trimmed.length <= 11) return trimmed;
-            return trimmed.slice(0, 11) + '…';
+            if (trimmed.length <= 12) return trimmed;
+            return trimmed.slice(0, 12) + '…';
         }
 
+        // ===== 超时 2500ms，重试 1 次 =====
         function fetchTTFund(code, retries) {
-            if (retries === undefined) retries = 2;
+            if (retries === undefined) retries = 1;
             return new Promise(function(resolve) {
                 var attempt = function(remain) {
                     var script = document.createElement('script');
                     var timer = setTimeout(function() { cleanup();
                         if (remain > 0) attempt(remain - 1);
-                        else resolve(null); }, 4000);
+                        else resolve(null); }, 2500);
                     window.jsonpgz = function(data) {
                         if (data && data.fundcode === code) {
                             cleanup();
@@ -1382,7 +1369,7 @@
             return new Promise(function(resolve) {
                 var script = document.createElement('script');
                 var timer = setTimeout(function() { cleanup();
-                    resolve(null); }, 4000);
+                    resolve(null); }, 2500);
                 var varName = 'v_jj' + code;
 
                 function cleanup() {
@@ -1416,31 +1403,26 @@
             });
         }
 
-        // ===== 核心：获取数据，增加 skipCache 参数 =====
         async function fetchFundDataOnly(code, skipCache) {
             var today = new Date().toISOString().substring(0, 10);
             var d = cache[code] || {};
 
-            // 如果 skipCache 为 true，跳过所有缓存检查，直接请求网络
-            if (!skipCache) {
-                // 如果已有今天的实际净值，直接返回缓存
-                if (d.actualDate === today && parseFloat(d.actualNav) > 0) {
-                    return {
-                        name: getValidName(d.name, code),
-                        nav: parseFloat(d.actualNav),
-                        changePercent: parseFloat(d.actualRate) || 0,
-                        navDate: today,
-                        gsz: parseFloat(d.gsz) || 0,
-                        gszzl: parseFloat(d.gszzl) || 0,
-                        source: 'cache'
-                    };
-                }
+            if (!skipCache && d.actualDate === today && parseFloat(d.actualNav) > 0) {
+                return {
+                    name: getValidName(d.name, code),
+                    nav: parseFloat(d.actualNav),
+                    changePercent: parseFloat(d.actualRate) || 0,
+                    navDate: today,
+                    gsz: parseFloat(d.gsz) || 0,
+                    gszzl: parseFloat(d.gszzl) || 0,
+                    source: 'cache'
+                };
             }
 
             var isTrading = isTradingTime();
 
             if (isTrading) {
-                var ttData = await fetchTTFund(code, 2);
+                var ttData = await fetchTTFund(code, 1);
                 if (ttData && ttData.gsz) {
                     var name = getValidName(ttData.name, code);
                     return {
@@ -1453,24 +1435,11 @@
                         source: 'tt'
                     };
                 }
-                // 如果请求失败，且没有强制跳过缓存，尝试使用缓存中的估值
-                if (!skipCache && d.gsz && parseFloat(d.gsz) > 0) {
-                    return {
-                        name: getValidName(d.name, code),
-                        gsz: parseFloat(d.gsz) || 0,
-                        gszzl: parseFloat(d.gszzl) || 0,
-                        nav: parseFloat(d.actualNav) || 0,
-                        changePercent: parseFloat(d.gszzl) || 0,
-                        navDate: d.actualDate || '',
-                        source: 'cache_est'
-                    };
-                }
                 return null;
             }
 
-            // 非交易时段：腾讯实际净值
             var txData = await fetchTencentNav(code);
-            if (txData && txData.nav > 0) {
+            if (txData && txData.nav > 0 && txData.date === today) {
                 var name = getValidName(txData.name, code);
                 return {
                     name: name,
@@ -1483,39 +1452,13 @@
                 };
             }
 
-            // 如果请求失败，且没有强制跳过缓存，尝试使用缓存中的实际净值
-            if (!skipCache && d.actualNav && parseFloat(d.actualNav) > 0) {
-                return {
-                    name: getValidName(d.name, code),
-                    nav: parseFloat(d.actualNav),
-                    changePercent: parseFloat(d.actualRate) || 0,
-                    navDate: d.actualDate || '',
-                    gsz: parseFloat(d.gsz) || 0,
-                    gszzl: parseFloat(d.gszzl) || 0,
-                    source: 'cached_nav'
-                };
-            }
-
-            // 最后尝试估值缓存
-            if (!skipCache && d.gsz && parseFloat(d.gsz) > 0) {
-                return {
-                    name: getValidName(d.name, code),
-                    gsz: parseFloat(d.gsz) || 0,
-                    gszzl: parseFloat(d.gszzl) || 0,
-                    nav: parseFloat(d.actualNav) || 0,
-                    changePercent: parseFloat(d.gszzl) || 0,
-                    navDate: d.actualDate || '',
-                    source: 'cache_est'
-                };
-            }
-
             return null;
         }
 
-        // ===== 更新单只基金（修复：估值不污染 actualNav） =====
         async function updateFund(code, skipCache) {
             var old = cache[code] || {};
             var data = await fetchFundDataOnly(code, skipCache);
+
             if (!data) {
                 if (!old.name) {
                     cache[code] = { name: code, gsz: 0, gszzl: 0, actualNav: '0', actualRate: 0, actualDate: '',
@@ -1527,8 +1470,6 @@
 
             var name = getValidName(data.name, code);
             var hasExistingNav = old.actualNav && parseFloat(old.actualNav) > 0;
-
-            // 只有这些来源才是真正的实际净值
             var isNewNav = data.source === 'tencent' || data.source === 'cached_nav';
 
             var newEntry = {
@@ -1541,36 +1482,27 @@
                 source: old.source || 'tt'
             };
 
-            // 只有真正的实际净值才写入 actualNav
             if (isNewNav && data.nav > 0) {
                 newEntry.actualNav = String(data.nav);
                 newEntry.actualRate = data.changePercent !== undefined ? data.changePercent : old.actualRate;
                 newEntry.actualDate = data.navDate || old.actualDate || '';
                 newEntry.source = data.source || 'tencent';
             }
-            // 如果已经有 actualNav，但新数据是估值，只更新估值字段，不覆盖 actualNav
-            // 如果还没有 actualNav，但数据里恰好有 nav（可能是 tt 里带的 dwjz），也不写入 actualNav
-            // 只有腾讯数据才能写入 actualNav
 
             cache[code] = newEntry;
             saveAll();
             return cache[code];
         }
 
-        // ===== 批量更新 =====
+        // ===== 全部并发 =====
         async function batchUpdate(codes, skipCache) {
             if (!codes.length) return;
-            var batchSize = 3;
-            for (var i = 0; i < codes.length; i += batchSize) {
-                var batch = codes.slice(i, i + batchSize);
-                await Promise.allSettled(batch.map(function(code) {
-                    return updateFund(code, skipCache);
-                }));
-                renderAll();
-            }
+            await Promise.allSettled(codes.map(function(code) {
+                return updateFund(code, skipCache);
+            }));
+            renderAll();
         }
 
-        // ===== 普通更新（优先缓存） =====
         async function silentUpdate() {
             try {
                 var codes = Object.keys(holdings);
@@ -1578,11 +1510,10 @@
                     await batchUpdate(codes, false);
                 }
             } catch (e) {
-                console.warn('后台更新失败，数据保持不变', e);
+                console.warn('后台更新失败', e);
             }
         }
 
-        // ===== 强制更新（跳过缓存） =====
         async function forceUpdate() {
             try {
                 var codes = Object.keys(holdings);
@@ -1594,33 +1525,14 @@
             }
         }
 
-        // ===== 刷新入口 =====
-        async function refreshWithCache(force) {
-            if (isUpdating) return;
-            isUpdating = true;
-            showUpdating(true);
-
-            if (force) {
-                await forceUpdate();
-            } else {
-                renderAll();
-                await silentUpdate();
-            }
-
-            showUpdating(false);
-            isUpdating = false;
-            scheduleAutoRefresh();
-        }
-
-        // ===== 自动刷新 =====
         var autoTimer = null;
 
         function startAutoRefresh() {
             stopAutoRefresh();
             if (!isTradingDay()) return;
-            if (isTradingTime()) refreshWithCache(false);
+            if (isTradingTime()) silentUpdate();
             autoTimer = setInterval(function() {
-                if (isTradingTime()) refreshWithCache(false);
+                if (isTradingTime()) silentUpdate();
                 else stopAutoRefresh();
             }, 60000);
         }
@@ -1630,9 +1542,6 @@
                 autoTimer = null; }
         }
 
-        function scheduleAutoRefresh() {}
-
-        // ===== 显示逻辑 =====
         function getDisplay(code) {
             var d = cache[code] || {};
             var nav = parseFloat(d.actualNav);
@@ -1682,9 +1591,10 @@
         function allFundsUpdated() {
             var codes = Object.keys(holdings);
             if (!codes.length) return false;
+            var today = new Date().toISOString().slice(0, 10);
             return codes.every(function(code) {
                 var d = cache[code] || {};
-                return parseFloat(d.actualNav) > 0;
+                return d.actualDate === today && parseFloat(d.actualNav) > 0;
             });
         }
 
@@ -1908,14 +1818,31 @@
                     '<div class="icon-wrap"><i class="fas fa-database"></i></div><span class="label">数据管理</span>';
                 dataBtn.className = 'action-btn';
                 dataBtn.onclick = function() { document.getElementById('openBackupModalBtn').click(); };
+
+                // ===== 刷新逻辑：图标转圈，无文字提示 =====
                 refreshBtn.onclick = function() {
-                    var icon = this.querySelector('.icon-wrap');
-                    if (icon) {
-                        icon.classList.remove('pop');
-                        void icon.offsetWidth;
-                        icon.classList.add('pop');
-                    }
-                    refreshWithCache(true);
+                    var icon = this.querySelector('.icon-wrap i');
+                    if (!icon) return;
+                    // 如果已经在更新，忽略本次点击
+                    if (isUpdating) return;
+
+                    // 切换到转圈图标
+                    icon.className = 'fas fa-spinner fa-spin';
+                    // 禁用按钮视觉反馈（可选）
+                    this.style.pointerEvents = 'none';
+
+                    isUpdating = true;
+                    forceUpdate()
+                        .catch(function(e) {
+                            console.warn('后台更新失败', e);
+                        })
+                        .finally(function() {
+                            isUpdating = false;
+                            // 恢复图标
+                            icon.className = 'fas fa-sync-alt';
+                            // 恢复点击
+                            refreshBtn.style.pointerEvents = '';
+                        });
                 };
             }
         }
@@ -2014,7 +1941,6 @@
             }
         });
 
-        // ===== 添加基金自动识别 =====
         var currentFetchName = '';
 
         async function autoFillFromCode(code) {
@@ -2028,7 +1954,7 @@
                 return;
             }
             try {
-                var data = await fetchTTFund(code, 2);
+                var data = await fetchTTFund(code, 1);
                 if (data && data.name) {
                     currentFetchName = data.name;
                     infoText.textContent = '已识别：' + data.name;
@@ -2108,7 +2034,7 @@
                 var name = currentFetchName;
                 if (!name) {
                     try {
-                        var data = await fetchTTFund(code, 2);
+                        var data = await fetchTTFund(code, 1);
                         if (data && data.name) name = data.name;
                     } catch (_) {}
                 }
@@ -2198,7 +2124,7 @@
                                 cache = data.cache || {};
                                 saveAll();
                                 overlay.classList.remove('active');
-                                await refreshWithCache(false);
+                                silentUpdate().then(function() { renderAll(); });
                             }
                         } else {
                             await showAlert('配置格式无效，请检查文件');
@@ -2219,24 +2145,10 @@
                     localStorage.setItem(STORAGE_C, JSON.stringify(cache));
                     overlay.classList.remove('active');
                     renderAll();
+                    silentUpdate().then(function() { renderAll(); });
                     await showAlert('缓存已清除');
                 }
             });
-        }
-
-        function showUpdating(show) {
-            var tip = document.getElementById('updatingTip');
-            var btn = document.getElementById('refreshBtn');
-            var icon = btn ? btn.querySelector('.icon-wrap i') : null;
-            if (show) {
-                tip.classList.add('show');
-                btn.classList.add('refresh-loading');
-                if (icon) icon.className = 'fas fa-spinner fa-spin';
-            } else {
-                tip.classList.remove('show');
-                btn.classList.remove('refresh-loading');
-                if (icon) icon.className = 'fas fa-sync-alt';
-            }
         }
 
         function registerSW() {
@@ -2253,16 +2165,11 @@
             renderAll();
 
             if (Object.keys(holdings).length > 0) {
-                var hasCache = Object.keys(cache).length > 0;
-                if (!hasCache) {
-                    refreshWithCache(false).then(function() {
-                        if (isTradingTime()) startAutoRefresh();
-                    });
-                } else {
-                    silentUpdate().then(function() {
-                        if (isTradingTime()) startAutoRefresh();
-                    });
-                }
+                silentUpdate().then(function() {
+                    if (isTradingTime()) startAutoRefresh();
+                });
+            } else {
+                if (isTradingTime()) startAutoRefresh();
             }
 
             setupModal();
@@ -2282,7 +2189,7 @@
 
             registerSW();
 
-            console.log('💡 修复完成：估值数据不再污染 actualNav');
+            console.log('✅ 刷新图标简洁版：点击刷新仅转圈，无额外提示');
         });
     </script>
 </body>
